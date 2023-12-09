@@ -12,3 +12,6 @@ Run this command from the directory in which you want to install your new Slim F
 git clone https://github.com/bbxmbb/my-slim.git .
 ```
 
+After that 
+1.create a .env file from .env.example
+2.change the set base Path to the current 
