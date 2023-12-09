@@ -2,23 +2,18 @@
 
 declare(strict_types=1);
 
+use App\Application\Controllers\_404Controller;
+use App\Application\Controllers\HomeController;
 use Psr\Log\LoggerInterface;
 use Slim\App;
 use Slim\Views\Twig;
-use App\Application\PDOPool\PDOPool;
 use App\Application\Actions\User\ViewUserAction;
-use App\Application\Controllers\HelloController;
 use App\Application\Actions\User\ListUsersAction;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
 
 return function (App $app) {
-    $app->options('/{routes:.*}', function (Request $request, Response $response) {
-        // CORS Pre-Flight OPTIONS Request Handler
-        return $response;
-    });
-
     $app->get('/', function (Request $request, Response $response) {
 
         $response->getBody()->write('Hello');
@@ -29,7 +24,7 @@ return function (App $app) {
         $group->get('', ListUsersAction::class);
         $group->get('/{id}', ViewUserAction::class);
     });
-    $app->get('/hello', HelloController::class . ':index');
+    $app->get('/home', HomeController::class . ':index');
     $app->get('/twig', function (Request $request, Response $response) {
         //using twig class response time decrease about 33%
         $response = $this->get(Twig::class)->render($response, 'index.twig');
@@ -78,4 +73,10 @@ return function (App $app) {
             ->withStatus(200);
     });
 
+    $app->options('/{routes:.*}', function (Request $request, Response $response) {
+        // CORS Pre-Flight OPTIONS Request Handler
+        return $response;
+    });
+
+    $app->get('/{routes:.*}', _404Controller::class . ':index');
 };

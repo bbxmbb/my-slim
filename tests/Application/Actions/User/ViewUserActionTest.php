@@ -33,11 +33,11 @@ class ViewUserActionTest extends TestCase
 
         $container->set(UserRepository::class, $userRepositoryProphecy->reveal());
 
-        $request = $this->createRequest('GET', '/users/1');
+        $request  = $this->createRequest('GET', '/users/1');
         $response = $app->handle($request);
 
-        $payload = (string) $response->getBody();
-        $expectedPayload = new ActionPayload(200, $user);
+        $payload           = (string) $response->getBody();
+        $expectedPayload   = new ActionPayload(200, $user);
         $serializedPayload = json_encode($expectedPayload, JSON_PRETTY_PRINT);
 
         $this->assertEquals($serializedPayload, $payload);
@@ -48,9 +48,9 @@ class ViewUserActionTest extends TestCase
         $app = $this->getAppInstance();
 
         $callableResolver = $app->getCallableResolver();
-        $responseFactory = $app->getResponseFactory();
+        $responseFactory  = $app->getResponseFactory();
 
-        $errorHandler = new HttpErrorHandler($callableResolver, $responseFactory);
+        $errorHandler    = new HttpErrorHandler($callableResolver, $responseFactory);
         $errorMiddleware = new ErrorMiddleware($callableResolver, $responseFactory, true, false, false);
         $errorMiddleware->setDefaultErrorHandler($errorHandler);
 
@@ -67,12 +67,12 @@ class ViewUserActionTest extends TestCase
 
         $container->set(UserRepository::class, $userRepositoryProphecy->reveal());
 
-        $request = $this->createRequest('GET', '/users/1');
+        $request  = $this->createRequest('GET', '/users/1');
         $response = $app->handle($request);
 
-        $payload = (string) $response->getBody();
-        $expectedError = new ActionError(ActionError::RESOURCE_NOT_FOUND, 'The user you requested does not exist.');
-        $expectedPayload = new ActionPayload(404, null, $expectedError);
+        $payload           = (string) $response->getBody();
+        $expectedError     = new ActionError(ActionError::RESOURCE_NOT_FOUND, 'The user you requested does not exist.');
+        $expectedPayload   = new ActionPayload(404, null, $expectedError);
         $serializedPayload = json_encode($expectedPayload, JSON_PRETTY_PRINT);
 
         $this->assertEquals($serializedPayload, $payload);
