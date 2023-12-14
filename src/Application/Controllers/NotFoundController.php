@@ -19,6 +19,5 @@ class NotFoundController extends Controller
         $response = $view->render($response, '404.twig');
 
         return $response;
-
     }
 }

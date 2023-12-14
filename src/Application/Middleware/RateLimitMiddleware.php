@@ -23,12 +23,14 @@ class RateLimitMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         //by pass this middleware when the remote address is undefined 
+
         if (!isset($_SERVER['REMOTE_ADDR'])) {
             $response = $handler->handle($request);
             return $response;
         }
 
         //by pass this middleware when disable 
+
         if ($this->rateLimitSettings['enable'] == 0) {
             $response = $handler->handle($request);
             return $response;
@@ -49,11 +51,14 @@ class RateLimitMiddleware implements MiddlewareInterface
             if ($elapsedTime > $this->rateLimitSettings['refillPeriod']) {
 
                 $_SESSION['rate_limit'][$ip] = ['timestamp' => $currentTime, 'count' => 1];
+
             } else {
 
                 if ($_SESSION['rate_limit'][$ip]['count'] >= $this->rateLimitSettings['maxCapacity']) {
+
                     $response = new Response;
                     $response->getBody()->write((string) ('Rate limit exceeded'));
+
                     return $response
                         ->withStatus(429)
                         ->withHeader('Content-Type', 'application/json')
@@ -68,6 +73,5 @@ class RateLimitMiddleware implements MiddlewareInterface
         $response       = $handler->handle($request);
 
         return $response->withHeader('X-RateLimit-Remaining', (string) $remainingCount);
-
     }
 }
