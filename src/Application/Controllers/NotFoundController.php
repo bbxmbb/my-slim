@@ -3,10 +3,8 @@
 namespace App\Application\Controllers;
 
 use Slim\Views\Twig;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use App\Application\Settings\SettingsInterface;
 
 class NotFoundController extends Controller
 {

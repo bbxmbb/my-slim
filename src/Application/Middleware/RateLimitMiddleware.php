@@ -56,7 +56,7 @@ class RateLimitMiddleware implements MiddlewareInterface
 
                 if ($_SESSION['rate_limit'][$ip]['count'] >= $this->rateLimitSettings['maxCapacity']) {
 
-                    $response = new Response;
+                    $response = new Response();
                     $response->getBody()->write((string) ('Rate limit exceeded'));
 
                     return $response

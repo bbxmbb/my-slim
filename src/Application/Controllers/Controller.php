@@ -2,7 +2,6 @@
 
 namespace App\Application\Controllers;
 
-use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
