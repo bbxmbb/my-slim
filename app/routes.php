@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Application\Controllers\_404Controller;
+use App\Application\Controllers\NotFoundController;
 use App\Application\Controllers\HomeController;
 use Psr\Log\LoggerInterface;
 use Slim\App;
@@ -84,5 +84,5 @@ return function (App $app) {
         return $response;
     });
 
-    // $app->get('/{routes:.*}', _404Controller::class . ':index');
+    // $app->get('/{routes:.*}', NotFoundController::class . ':index');
 };

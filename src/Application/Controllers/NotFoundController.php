@@ -8,7 +8,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use App\Application\Settings\SettingsInterface;
 
-class _404Controller extends Controller
+class NotFoundController extends Controller
 {
     public function index(RequestInterface $request, ResponseInterface $response)
     {
