@@ -57,6 +57,7 @@ return function (ContainerBuilder $containerBuilder) {
                     'connectionTimeout' => 1
                 ],
                 'rateLimit' => [
+                    'enable' => false,
                     'refillPeriod' => 60,
                     'maxCapacity' => 10
                 ]

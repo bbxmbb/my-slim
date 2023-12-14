@@ -21,7 +21,7 @@ return function (App $app) {
         var_dump(($_SESSION['rate_limit']));
         print_r("hello");
         echo "</pre>";
-        $response->getBody()->write(json_encode($request->getServerParams()['REMOTE_ADDR']));
+        $response->getBody()->write(json_encode('hello'));
         return $response;
     });
 
