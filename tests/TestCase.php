@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use DI\ContainerBuilder;
-use Exception;
-use PHPUnit\Framework\TestCase as PHPUnit_TestCase;
-use Prophecy\PhpUnit\ProphecyTrait;
-use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
-use Slim\Factory\AppFactory;
-use Slim\Psr7\Factory\StreamFactory;
-use Slim\Psr7\Headers;
-use Slim\Psr7\Request as SlimRequest;
+use Exception;
+use Dotenv\Dotenv;
 use Slim\Psr7\Uri;
+use Slim\Psr7\Headers;
+use DI\ContainerBuilder;
+use Slim\Factory\AppFactory;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Slim\Psr7\Factory\StreamFactory;
+use Slim\Psr7\Request as SlimRequest;
+use PHPUnit\Framework\TestCase as PHPUnit_TestCase;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class TestCase extends PHPUnit_TestCase
 {
@@ -26,6 +27,9 @@ class TestCase extends PHPUnit_TestCase
      */
     protected function getAppInstance(): App
     {
+
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
+        $dotenv->load();
         // Instantiate PHP-DI ContainerBuilder
         $containerBuilder = new ContainerBuilder();
 
@@ -54,6 +58,7 @@ class TestCase extends PHPUnit_TestCase
         $middleware = require __DIR__ . '/../app/middleware.php';
         $middleware($app);
 
+        // $app->setBasePath("/my-slim");
         // Register routes
         $routes = require __DIR__ . '/../app/routes.php';
         $routes($app);
@@ -76,7 +81,7 @@ class TestCase extends PHPUnit_TestCase
         array $cookies = [],
         array $serverParams = []
     ): Request {
-        $uri = new Uri('', '', 80, $path);
+        $uri    = new Uri('', '', 80, $path);
         $handle = fopen('php://temp', 'w+');
         $stream = (new StreamFactory())->createStreamFromResource($handle);
 

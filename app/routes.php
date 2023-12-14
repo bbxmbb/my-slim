@@ -15,8 +15,13 @@ use Slim\Interfaces\RouteCollectorProxyInterface as Group;
 
 return function (App $app) {
     $app->get('/', function (Request $request, Response $response) {
-
-        $response->getBody()->write('Hello');
+        // session_start();
+        $session = $request->getAttribute('session');
+        echo "<pre>";
+        var_dump(($_SESSION['rate_limit']));
+        print_r("hello");
+        echo "</pre>";
+        $response->getBody()->write(json_encode($request->getServerParams()['REMOTE_ADDR']));
         return $response;
     });
 
@@ -24,6 +29,7 @@ return function (App $app) {
         $group->get('', ListUsersAction::class);
         $group->get('/{id}', ViewUserAction::class);
     });
+
     $app->get('/home', HomeController::class . ':index');
     $app->get('/twig', function (Request $request, Response $response) {
         //using twig class response time decrease about 33%
@@ -78,5 +84,5 @@ return function (App $app) {
         return $response;
     });
 
-    $app->get('/{routes:.*}', _404Controller::class . ':index');
+    // $app->get('/{routes:.*}', _404Controller::class . ':index');
 };

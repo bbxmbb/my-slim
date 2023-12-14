@@ -22,8 +22,10 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        session_start(); // Start the session (make sure session is configured in php.ini)
-
+        if (!isset($_SERVER['REMOTE_ADDR'])) {
+            $response = $handler->handle($request);
+            return $response;
+        }
         $ip = $_SERVER['REMOTE_ADDR'];
         if (!isset($_SESSION['rate_limit'][$ip])) {
             $_SESSION['rate_limit'][$ip] = ['timestamp' => time(), 'count' => 1];
@@ -48,6 +50,8 @@ class RateLimitMiddleware implements MiddlewareInterface
         }
         $remainingCount = max(0, $this->rateLimitSettings['maxCapacity'] - $_SESSION['rate_limit'][$ip]['count']);
         $response       = $handler->handle($request);
+
         return $response->withHeader('X-RateLimit-Remaining', (string) $remainingCount);
+
     }
 }

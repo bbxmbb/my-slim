@@ -74,6 +74,6 @@ class ActionTest extends TestCase
         $request  = $this->createRequest('GET', '/test-action-response-code');
         $response = $app->handle($request);
 
-        $this->assertEquals(202, $response->getStatusCo55e());
+        $this->assertEquals(202, $response->getStatusCode());
     }
 }
