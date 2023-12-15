@@ -19,12 +19,17 @@ return function (ContainerBuilder $containerBuilder) {
             $loggerSettings = $settings->get('logger');
             $logger         = new Logger($loggerSettings['name']);
 
-            $processor = new UidProcessor();
-            $logger->pushProcessor($processor);
+            if ($loggerSettings['enable']) {
 
-            $handler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
-            $logger->pushHandler($handler);
+                $processor = new UidProcessor();
+                $logger->pushProcessor($processor);
 
+                $handler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
+                $logger->pushHandler($handler);
+            } else {
+                // Disable logging by removing all handlers
+                $logger->setHandlers([]);
+            }
             return $logger;
         },
         PDO::class => function (ContainerInterface $c) {
