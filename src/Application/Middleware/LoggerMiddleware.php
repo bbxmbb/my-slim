@@ -28,8 +28,11 @@ class LoggerMiddleware implements MiddlewareInterface
         // Handle 404 Not Found and log it as an error
         if ($status == 404) {
 
-            $this->logger->error("$status Not Found: " . $request->getUri());
+            $this->logger->error("$status Not Found: " . $request->getMethod() . ' ' . $request->getUri());
 
+        } else if ($status > 400 && $status < 600) {
+
+            $this->logger->error("$status " . $request->getMethod() . ' ' . $request->getUri());
         } else {
 
             $remoteAddr = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
