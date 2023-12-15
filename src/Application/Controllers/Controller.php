@@ -13,17 +13,15 @@ class Controller
     protected ContainerInterface $container;
 
     protected LoggerInterface $logger;
-
-    protected Request $request;
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
-
-        $this->logger = $this->container->get(LoggerInterface::class);
+        $this->logger    = $this->container->get(LoggerInterface::class);
     }
-    protected function logData($route, $methodName)
+    protected function logData(string $methodName, string $currentPath = '')
     {
         $remoteAddr = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
-        $this->logger->info(get_class($this) . ' ' . $route . ' ' . $remoteAddr);
+        $this->logger->info(get_class($this) . ' ' . $currentPath . ' ' . $remoteAddr);
     }
+
 }

@@ -15,9 +15,6 @@ class ItemController extends Controller
     public function getItem(Request $request, Response $response)
     {
 
-
-        $this->logData($request->getUri()->getPath(), __FUNCTION__);
-
         $pdo = $this->container->get(PDO::class);
         // $token = $request->getAttribute('jwt_token');
         // return $response->withJson(['username' => $token->username]);
@@ -100,7 +97,6 @@ class ItemController extends Controller
 
     public function postItem(Request $request, Response $response)
     {
-        $this->logData(__FUNCTION__);
 
         $pdo  = $this->container->get(PDO::class);
         $body = $request->getBody();
@@ -155,8 +151,6 @@ class ItemController extends Controller
 
     public function putItem(Request $request, Response $response, $args)
     {
-
-        $this->logData(__FUNCTION__);
 
         $pdo  = $this->container->get(PDO::class);
         $id   = $args['id'];
@@ -216,7 +210,6 @@ class ItemController extends Controller
 
     public function deleteItem(Request $request, Response $response, $args)
     {
-        $this->logData(__FUNCTION__);
 
         $pdo = $this->container->get(PDO::class);
         $id  = $args['id'];

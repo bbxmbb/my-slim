@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Application\Controllers\ItemController;
 use App\Application\Controllers\NotFoundController;
 use App\Application\Controllers\HomeController;
+use App\Application\Middleware\LoggerMiddleware;
 use Psr\Log\LoggerInterface;
 use Slim\App;
 use Slim\Views\Twig;
@@ -89,7 +90,7 @@ return function (App $app) {
         $group->post('', ItemController::class . ':postItem');
         $group->put('/{id}', ItemController::class . ':putItem');
         $group->delete('/{id}', ItemController::class . ':deleteItem');
-    });
+    })->add(LoggerMiddleware::class);
 
 
     $app->options('/{routes:.*}', function (Request $request, Response $response) {
