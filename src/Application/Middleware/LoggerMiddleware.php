@@ -14,23 +14,28 @@ class LoggerMiddleware implements MiddlewareInterface
 {
     private $logger;
 
-    private $container;
-
     public function __construct(ContainerInterface $container)
     {
-        $this->container = $container;
-
         $this->logger = $container->get(LoggerInterface::class);
     }
 
     public function process(Request $request, RequestHandler $handler): Response
     {
-        $remoteAddr = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
-        // Log information about the request
-        $this->logger->info($request->getMethod() . ' ' . $request->getUri() . ' ' . $remoteAddr);
-
-        // Continue to the next middleware or route handler
         $response = $handler->handle($request);
+
+        $status = $response->getStatusCode();
+
+        // Handle 404 Not Found and log it as an error
+        if ($status == 404) {
+
+            $this->logger->error("$status Not Found: " . $request->getUri());
+
+        } else {
+
+            $remoteAddr = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
+
+            $this->logger->info($status . ' ' . $request->getMethod() . ' ' . $request->getUri() . ' ' . $remoteAddr);
+        }
 
         return $response;
     }

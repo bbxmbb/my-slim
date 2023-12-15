@@ -93,10 +93,10 @@ return function (App $app) {
     })->add(LoggerMiddleware::class);
 
 
-    $app->options('/{routes:.*}', function (Request $request, Response $response) {
-        // CORS Pre-Flight OPTIONS Request Handler
-        return $response;
-    });
+    // $app->options('/{routes:.*}', function (Request $request, Response $response) {
+    //     // CORS Pre-Flight OPTIONS Request Handler
+    //     return $response;
+    // });
 
-    // $app->get('/{routes:.*}', NotFoundController::class . ':index');
+    $app->get('/{routes:.*}', NotFoundController::class . ':index')->add(LoggerMiddleware::class);
 };

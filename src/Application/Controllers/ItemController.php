@@ -64,7 +64,7 @@ class ItemController extends Controller
         } catch (PDOException $e) {
             // Handle PDO-related exceptions
             $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
 
         // Create a response array with different data types
@@ -115,7 +115,7 @@ class ItemController extends Controller
             )->assert($data);
         } catch (NestedValidationException $exception) {
             $response->getBody()->write(json_encode(['messagee' => $exception->getMessages()]));
-            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -142,7 +142,7 @@ class ItemController extends Controller
             $response->getBody()->write(json_encode(['message' => 'Item created', 'id' => $insertedItemId, 'data' => $lastInsertedData]));
         } catch (PDOException $e) {
             $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
 
         return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
@@ -168,7 +168,7 @@ class ItemController extends Controller
             }
         } catch (PDOException $e) {
             $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
 
         // Validate data
@@ -184,7 +184,7 @@ class ItemController extends Controller
             )->assert($data);
         } catch (NestedValidationException $exception) {
             $response->getBody()->write(json_encode(['messagee' => $exception->getMessages()]));
-            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -201,7 +201,7 @@ class ItemController extends Controller
             ]);
         } catch (PDOException $e) {
             $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
         $response->getBody()->write(json_encode(['message' => 'Item updated', 'id' => $id, 'data' => $data]));
 
@@ -224,7 +224,7 @@ class ItemController extends Controller
             }
         } catch (PDOException $e) {
             $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -232,7 +232,7 @@ class ItemController extends Controller
             $stmt->execute([$id]);
         } catch (PDOException $e) {
             $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
         $response->getBody()->write(json_encode(['message' => 'Item deleted', 'id' => $id]));
 

@@ -10,12 +10,11 @@ class NotFoundController extends Controller
 {
     public function index(RequestInterface $request, ResponseInterface $response)
     {
-        $this->logData(__FUNCTION__);
 
         $view = $this->container->get(Twig::class);
 
         $response = $view->render($response, '404.twig');
 
-        return $response;
+        return $response->withStatus(404);
     }
 }
