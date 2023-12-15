@@ -19,3 +19,11 @@ composer update
 After that 
 1. create a .env file from .env.example
 2. change the set base Path to the current 
+
+## Clone old version
+
+You can clone different release by using this command
+
+```bash
+git clone --branch v1.0 --single-branch https://github.com/bbxmbb/my-slim.git .
+``````
