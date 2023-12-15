@@ -3,17 +3,20 @@ namespace App\Application\Controllers;
 
 use PDO;
 use PDOException;
+use Slim\Routing\RouteContext;
+use Respect\Validation\Validator as v;
 use App\Application\Controllers\Controller;
 use Psr\Http\Message\ResponseInterface as Response;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\Exceptions\NestedValidationException;
-use Respect\Validation\Validator as v;
 
 class ItemController extends Controller
 {
     public function getItem(Request $request, Response $response)
     {
-        $this->logData(__FUNCTION__);
+
+
+        $this->logData($request->getUri()->getPath(), __FUNCTION__);
 
         $pdo = $this->container->get(PDO::class);
         // $token = $request->getAttribute('jwt_token');
