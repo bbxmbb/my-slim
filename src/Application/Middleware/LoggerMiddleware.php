@@ -30,7 +30,7 @@ class LoggerMiddleware implements MiddlewareInterface
 
             $this->logger->error("$status Not Found: " . $request->getMethod() . ' ' . $request->getUri());
 
-        } else if ($status > 400 && $status < 600) {
+        } else if ($status >= 400 && $status <= 600) {
 
             $this->logger->error("$status " . $request->getMethod() . ' ' . $request->getUri());
         } else {
