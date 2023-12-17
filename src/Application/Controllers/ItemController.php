@@ -102,6 +102,27 @@ class ItemController extends Controller
         $body = $request->getBody();
         $data = json_decode($body, true);
 
+        // Check if the items table exists
+        $tableName   = 'items';
+        $stmt        = $pdo->query("SHOW TABLES LIKE '$tableName'");
+        $tableExists = $stmt->rowCount() > 0;
+
+        // If the table doesn't exist, create it
+        if (!$tableExists) {
+            $createTableQuery = "
+            CREATE TABLE $tableName (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                name VARCHAR(255) NOT NULL,
+                description VARCHAR(255) NOT NULL,
+                numberValue int NOT NULL,
+                booleanValue tinyint DEFAULT 0 ,
+                arrayValue text NOT NULL,
+                objectValue text NOT NULL
+            )
+        ";
+            $pdo->exec($createTableQuery);
+
+        }
         // Validate data
         try {
             v::key('name', v::stringType())->assert($data);
