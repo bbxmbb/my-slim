@@ -9,6 +9,23 @@ deny from all
   # Redirect to the public folder
   RewriteEngine On
   # RewriteBase /
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  RewriteRule ^(.+)\.jpeg$ - [L]
+  RewriteRule ^(.+)\.jpg$ - [L]
+  RewriteRule ^(.+)\.png$ - [L]
+  RewriteRule ^(.+)\.woff2$ - [L]
+  RewriteRule ^(.+)\.woff$ - [L]
+  RewriteRule ^(.+)\.ttf$ - [L]
+  RewriteRule ^(.+)\.txt$ - [L]
+  RewriteRule ^(.+)\.min.css.map - [L]
+  RewriteRule ^(.+)\.min.css$ - [L]
+  RewriteRule ^(.+)\.css$ - [L]
+  RewriteRule ^(.+)\.min.js.map - [L]
+  RewriteRule ^(.+)\.min.js$ - [L]
+  RewriteRule ^(.+)\.js$ - [L]
+
   RewriteRule ^$ public/ [L]
   RewriteRule (.*) public/$1 [L]
 

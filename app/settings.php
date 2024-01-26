@@ -14,8 +14,13 @@ return function (ContainerBuilder $containerBuilder) {
         SettingsInterface::class => function () {
             return new Settings([
                 'displayErrorDetails' => true, // Should be set to false in production
-                'logError' => true,
-                'logErrorDetails' => true,
+                'logError' => false,
+                'logErrorDetails' => false,
+                'defaultTimezone' => [
+                    'name' => 'Asia/Bangkok',
+                    'time' => '+07:00'
+                ],
+                'basePath' => '/my-slim',
                 'logger' => [
                     'name' => 'my-slim',
                     'path' => isset($_ENV['docker']) ? 'php://stdout' : __DIR__ . '/../logs/app.log',
@@ -38,19 +43,27 @@ return function (ContainerBuilder $containerBuilder) {
                         'debug' => true,
                     ],
                 ],
+                // 'mailer' => [
+                //     'host' => 'smtp.hostinger.com',
+                //     'port' => 465,
+                //     'username' => 'info@slim.bbxmbb.com',
+                //     'password' => 'Sbomb2535M@',
+                //     'encryption' => 'ssl',
+                //     'from' => [
+                //         'email' => 'info@slim.bbxmbb.com',
+                //         'name' => 'bbxmbb'
+                //     ]
+                // ],
                 'mailer' => [
-                    'host' => 'smtp.hostinger.com',
-                    'port' => 465,
-                    'username' => 'info@slim.bbxmbb.com',
-                    'password' => 'Sbomb2535M@',
-                    'encryption' => 'ssl',
+                    'host' => 'smtp.gmail.com',
+                    'port' => 587,
+                    'username' => 'bbombb.bbombb@gmail.com',
+                    'password' => 'derc qhgr kkgf fsdv',
+                    'encryption' => 'false',
                     'from' => [
-                        'email' => 'info@slim.bbxmbb.com',
+                        'email' => 'bbombb.bbombb@gmail.com',
                         'name' => 'bbxmbb'
                     ]
-                ],
-                'register' => [
-                    'allow' => false,
                 ],
                 'redis' => [
                     'host' => '127.0.0.1',

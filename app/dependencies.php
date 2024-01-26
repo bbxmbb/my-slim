@@ -7,9 +7,11 @@ use Slim\Views\Twig;
 use DI\ContainerBuilder;
 use Psr\Log\LoggerInterface;
 use Monolog\Handler\StreamHandler;
+use PHPMailer\PHPMailer\PHPMailer;
 use Monolog\Processor\UidProcessor;
 use Psr\Container\ContainerInterface;
 use App\Application\Settings\SettingsInterface;
+use App\Application\Helpers\AssetExtension;
 
 return function (ContainerBuilder $containerBuilder) {
     $containerBuilder->addDefinitions([
@@ -52,6 +54,8 @@ return function (ContainerBuilder $containerBuilder) {
 
             $twig = Twig::create($viewSettings['template_path'], $viewSettings['twig']);
 
+            $twig->addExtension(new AssetExtension($_ENV["MYPATH"]));
+
             return $twig;
         },
         Redis::class => function (ContainerInterface $c) {
@@ -60,6 +64,32 @@ return function (ContainerBuilder $containerBuilder) {
             $redis         = new Redis;
             $redis->connect($redisSettings['host'], $redisSettings['port'], $redisSettings['connectionTimeout']);
             return $redis;
+        },
+        PHPMailer::class => function (ContainerInterface $c) {
+            $settings     = $c->get(SettingsInterface::class);
+            $mailerConfig = $settings->get('mailer');
+
+            $mailer = new PHPMailer(true);
+            $mailer->isSMTP();
+            $mailer->Host       = $mailerConfig['host'];
+            $mailer->SMTPAuth   = true;
+            $mailer->Username   = $mailerConfig['username'];
+            $mailer->Password   = $mailerConfig['password'];
+            $mailer->SMTPSecure = $mailerConfig['encryption'];
+            $mailer->Port       = $mailerConfig['port'];
+
+            return $mailer;
+        },
+        Eloquent::class => function (ContainerInterface $c) {
+            $settings = $c->get(SettingsInterface::class);
+
+            $capsule = new \Illuminate\Database\Capsule\Manager;
+            $capsule->addConnection($settings->get('db'));
+
+            $capsule->setAsGlobal();
+            $capsule->bootEloquent();
+
+            return $capsule;
         }
     ]);
 };
