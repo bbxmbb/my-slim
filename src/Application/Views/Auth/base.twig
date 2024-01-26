@@ -1,0 +1,176 @@
+{#
+<!DOCTYPE html> #}
+<html class="h-100" data-bs-theme="dark">
+
+<head>
+    {% block header %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Poppins:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!--toggle dark mode start at bootstrap 5.3.2-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- moment date  -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <!-- pdf,xlsx,csv -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+    <style>
+        * {
+            font-family: 'Noto Sans Thai', 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+        }
+    </style>
+    {% endblock %}
+    {% block inpagestyle %}{% endblock %}
+    <title>
+        {% block title %}
+        My App
+        {% endblock %}
+    </title>
+    <style>
+        .navbar-toggler {
+            font-size: 1rem;
+            border: none;
+        }
+
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #loading-icon {
+            width: 50px;
+            height: 50px;
+            background-color: transparent;
+            border-radius: 50%;
+            border: 10px solid white;
+            border-top: 10px solid transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="d-flex h-100 text-center ">
+
+    <div class=" d-flex h-100 w-100 mx-auto flex-column w-100">
+        {% block navbar %}
+        <header class="mb-auto shadow-sm">
+            <div>
+
+                <nav class="navbar navbar-expand-md">
+                    <div class="container">
+                        <a class="navbar-brand " href="#">BBXMBB</a>
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#navbarScroll" aria-controls="navbarScroll" aria-expanded="false"
+                            aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarScroll">
+                            <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll">
+                                <li class="nav-item">
+                                    <a class="nav-link active " aria-current="page" href='{{base_url}}' +"/login">Home
+                                        </a> </li> <li class="nav-item dropdown " hidden>
+                                        <a class="nav-link dropdown-toggle " href="#" role="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            Link
+                                        </a>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item " href="#">Action</a></li>
+                                            <li><a class="dropdown-item " href="#">Another action</a></li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
+                                            <li><a class="dropdown-item " href="#">Something else here</a></li>
+                                        </ul>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link " href="/login">Login</a>
+                                </li>
+                            </ul>
+                            <form class="d-flex my-auto" role="search">
+                                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                                <button class="btn btn-outline-primary " type="submit">Search</button>
+                            </form>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <div id="overlay">
+            <div id="loading-icon"></div>
+        </div>
+        {% endblock %}
+        {% block content %}{% endblock %}
+        {% block footer %}{% endblock %}
+        {% block javscript %}{% endblock %}
+    </div>
+    {{include('Auth/theme-toggle.html')}}
+    <script>
+        $(document).ready(function () {
+            //onclick any nav-items on sidebar
+            $('header a').click(function (e) {
+                var currentURL = window.location.href.split("/");
+                var targetURL = $(this).attr('href').split("/");
+                console.log(currentURL);
+                console.log(targetURL);
+                if (currentURL[4] == targetURL[1]) {
+                    e.preventDefault();
+                }
+            });
+            overlayStop();
+        });
+
+        function overlayStart() {
+
+            var overlay = document.getElementById("overlay");
+            var loadingIcon = document.getElementById("loading-icon");
+            overlay.style.display = "flex";
+            loadingIcon.style.display = "block";
+        }
+
+        function overlayStop() {
+
+
+            var overlay = document.getElementById("overlay");
+            var loadingIcon = document.getElementById("loading-icon");
+            overlay.style.display = "none";
+            loadingIcon.style.display = "none";
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,124 @@
+{% extends 'admin/base.twig' %}
+{% block stylesheets %}
+<style>
+
+</style>
+{% endblock %}
+{% block content %}
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">ตั้งค่า</h1>
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item active"><a href="#">Settings</a></li>
+                    </ol>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">ตั้งค่า</h5>
+
+                            <p class="card-text">
+                                <form action="{{assetUrl('items')}}" id="mainForm" method="POST">
+                                    <div class="form-check form-switch ms-3">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            id="allowRegister">
+                                        <label class="form-check-label" for="allowRegister">สมัครสมาชิค
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-switch ms-3">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            id="allowRegisterFromGoogle">
+                                        <label class="form-check-label" for="allowRegisterFromGoogle">สมัครสมาชิคด้วย
+                                            Google
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-primary" id="submit" type="button">บันทึก</button>
+                                </form>
+                            </p>
+                        </div>
+                    </div><!-- /.card -->
+                </div>
+                <!-- /.col-md-6 -->
+            </div>
+            <!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+{% endblock %}
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        $("#allowRegister").prop('checked', Number('{{allowRegister}}'));
+        $("#allowRegisterFromGoogle").prop('checked', Number('{{allowRegisterWithGoogle}}'));
+
+        $("#submit").on("click", function () {
+            Swal.fire({
+                title: "ยินยันการบันทึก",
+                showCancelButton: true,
+                confirmButtonText: "ยืนยัน",
+                cancelButtonText: `ยกเลิก`,
+                icon: "info"
+            }).then((result) => {
+                event.preventDefault();
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    var formData = {
+                        register: $('#allowRegister').prop('checked'),
+                        registerWithGoogle: $('#allowRegisterFromGoogle').prop('checked'),
+                    };
+                    var jsonData = JSON.stringify(formData);
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '{{base_url}}' + '/updateSettings',
+
+                        contentType: 'application/json',
+                        data: jsonData,
+                        success: function (response) {
+                            //responseJSON = JSON.parse(response.responseText);
+                            console.log("response", response);
+                            Swal.fire({
+                                title: "บันทึกสำเร็จ",
+                                text: response.data.message,
+                                showCloseButton: true,
+                                showConfirmButton: false,
+                                icon: "success"
+                            });
+                        },
+                        error: function (error) {
+                            errorJSON = JSON.parse(error.responseText);
+                            console.error("error", errorJSON);
+                            Swal.fire({
+                                title: "ไม่สำเร็จ",
+                                text: errorJSON.error.description,
+                                showCloseButton: true,
+                                showConfirmButton: false,
+                                icon: "error"
+                            })
+                        }
+                    });
+                }
+            });
+        })
+    })
+</script>
+{% endblock %}

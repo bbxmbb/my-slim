@@ -1,0 +1,313 @@
+{% extends 'Auth/base.twig' %}
+{% block title %}
+Signin
+
+{% endblock %}
+{% block inpagestyle %}
+<style>
+    .form-signin {
+        max-width: 330px;
+        padding: 1rem;
+    }
+
+    .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+    }
+
+    @media(min-width: 768px) {
+        .bd-placeholder-img-lg {
+            font-size: 3.5rem;
+        }
+    }
+
+    .b-example-divider {
+        width: 100%;
+        height: 3rem;
+        background-color: rgba(0, 0, 0, 0.1);
+        border: solid rgba(0, 0, 0, 0.15);
+        border-width: 1px 0;
+        box-shadow: inset 0 0.5em 1.5em rgba(0, 0, 0, 0.1), inset 0 0.125em 0.5em rgba(0, 0, 0, 0.15);
+    }
+
+    .b-example-vr {
+        flex-shrink: 0;
+        width: 1.5rem;
+        height: 100vh;
+    }
+
+
+    .nav-scroller {
+        position: relative;
+        z-index: 2;
+        height: 2.75rem;
+        overflow-y: hidden;
+    }
+
+    .nav-scroller .nav {
+        display: flex;
+        flex-wrap: nowrap;
+        padding-bottom: 1rem;
+        margin-top: -1px;
+        overflow-x: auto;
+        text-align: center;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .btn-bd-primary {
+        --bd-violet-bg: #712cf9;
+        --bd-violet-rgb: 112.520718, 44.062154, 249.437846;
+
+        --bs-btn-font-weight: 600;
+        --bs-btn-color: var(--bs-white);
+        --bs-btn-bg: var(--bd-violet-bg);
+        --bs-btn-border-color: var(--bd-violet-bg);
+        --bs-btn-hover-color: var(--bs-white);
+        --bs-btn-hover-bg: #6528e0;
+        --bs-btn-hover-border-color: #6528e0;
+        --bs-btn-focus-shadow-rgb: var(--bd-violet-rgb);
+        --bs-btn-active-color: var(--bs-btn-hover-color);
+        --bs-btn-active-bg: #5a23c8;
+        --bs-btn-active-border-color: #5a23c8;
+    }
+
+    .bd-mode-toggle {
+        z-index: 1500;
+    }
+
+    @keyframes shake {
+        0% {
+            transform: translateX(0);
+        }
+
+        25% {
+            transform: translateX(-10px);
+        }
+
+        50% {
+            transform: translateX(10px);
+        }
+
+        75% {
+            transform: translateX(-10px);
+        }
+
+        100% {
+            transform: translateX(0);
+        }
+    }
+
+    .shake {
+        animation: shake 0.5s;
+    }
+</style>
+{% endblock %}
+{% block content %}
+
+<body class="d-flex align-items-center py-4 ">
+    <!-- Custom styles for this template -->
+
+    <main class="form-signin w-100 m-auto d-grid align-items-center h-100">
+        <form id="loginForm">
+            <h1 class="h2 mb-4 fw-normal ">Continue With</h1>
+
+            <div class="alert alert-danger" id="errorContainer" role="alert" style="display:none;"></div>
+            <div class="alert alert-success" id="successContainer" role="alert" style="display:none;"></div>
+            <div class="container">
+
+            </div>
+            <div class="g-signin2" data-onsuccess="onSignIn"></div>
+
+            <div class="text-center my-2">
+
+                <div class="d-flex justify-content-center mt-2">
+                    {# <div><a
+                            href="https://accounts.google.com/gsi/select?client_id=622209003516-c2splslf6r7gc38vks1hkvjki12pfse4.apps.googleusercontent.com&ux_mode=redirect&login_uri=http%3A%2F%2Flocalhost%2Fmy-slim%2FloginWithGoogle&ui_mode=bottom_sheet&as=vZwGkMI7NFbCPq%2BCiv%2FjhQ&g_csrf_token=de5fd73e5bc486a&origin=http%3A%2F%2Flocalhost">
+                            <img class="btn rounded-1 border p-2" style="width:4rem" 
+                                src="public/assets/google_logo_image.png" alt="google login button">
+                        </a>
+                    </div> #}
+                    <div id="googleLoginBtn"></div>
+                    {# <div id="g_id_onload"
+                        data-client_id="622209003516-c2splslf6r7gc38vks1hkvjki12pfse4.apps.googleusercontent.com"
+                        data-context="signin" data-ux_mode="redirect"
+                        data-login_uri="https://slim.bbxmbb.com/userLoginWithGoogle" data-close_on_tap_outside="false"
+                        data-itp_support="true">
+                    </div>
+
+                    <div class="g_id_signin" data-type="icon" data-shape="rectangular" data-theme="outline"
+                        data-text="signin_with" data-size="large" data-logo_alignment="left" data-width="300">
+                    </div> #}
+                </div>
+                <div class="container my-3">
+                    <div class="row">
+                        <div class="col">
+                            <hr>
+                        </div>
+                        <div class="col">หรือ</div>
+                        <div class="col">
+                            <hr>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-floating my-2">
+                <input type="email" name="email" id="email" class="form-control " id="floatingInput"
+                    placeholder="name@example.com">
+                <label for="floatingInput">Email address</label>
+            </div>
+            <div class="form-floating my-2">
+                <input type="password" name="password" id="password" class="form-control" id="floatingPassword"
+                    placeholder="Password">
+                <label for="floatingPassword">Password</label>
+            </div>
+            <div class="form-check text-start my-3">
+                <input class="form-check-input" type="checkbox" name="rememberMe" value="remember-me" id="rememberMe">
+                <label class="form-check-label " for="rememberMe">Remember me</label>
+            </div>
+            <button class="btn btn-primary w-100 py-2" type="button" id="submitBtn" onclick='beforeSubmitForm();'>
+                Sign in</button>
+            <div class="row">
+                <div class="col">
+                    <p class="my-3 fw-normal text-start"><a class=" text-black" id="registerLink"
+                            href="register">Register</a></p>
+                </div>
+                <div class="col-auto">
+                    <p class="my-3 fw-normal text-end"><a class=" text-black" href="resetPassword">forget
+                            password?</a>
+                    </p>
+                </div>
+            </div>
+
+
+            <p class="mt-5 mb-3 ">2023</p>
+        </form>
+    </main>
+</body>
+{% endblock %}
+{% block javscript %}
+<script defer src="https://accounts.google.com/gsi/client" async></script>
+
+{# <script src="/public/js/googleClient.js" async defer></script> #}
+
+
+<script src="https://apis.google.com/js/platform.js?onload=renderButton" async defer></script>
+
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+<script>
+    window.onload = function () {
+        google.accounts.id.initialize({
+
+            client_id: "622209003516-c2splslf6r7gc38vks1hkvjki12pfse4.apps.googleusercontent.com",
+            callback: handleCredentialResponse,
+            cancel_on_tap_outside: false,
+            ux_mode: "redirect",
+            //redirect_uri: '{{base_url}}' + "/admin/items/report",
+            login_uri: '{{base_url}}' + "/loginWithGoogle"
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("googleLoginBtn"), {
+                type: "icon",
+                theme: "outline",
+                size: "large",
+                text: "continue_with",
+                'width': 300,
+            } // customization attributes
+        );
+        google.accounts.id.prompt(); // also display the One Tap dialog
+
+
+    }
+
+    function handleCredentialResponse(response) {
+        var url = 'loginWithGoogle';
+        submitForm(response, url);
+    }
+
+    var global;
+    $(document).ready(function () {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const message = urlParams.get('message');
+        const status = urlParams.get('status');
+        if (message != null) {
+            if (status == 'true') {
+
+                $('#errorContainer').hide();
+                $('#successContainer').html(message).show();
+            } else {
+                $('#errorContainer').html(message).show();
+                $('#successContainer').hide();
+            }
+        }
+        $('#loginForm').on('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent the default form submission
+                beforeSubmitForm();
+            }
+        });
+        if ('{{register}}' == false) {
+            $("#registerLink").hide();
+        }
+    });
+
+    function beforeSubmitForm() {
+
+        var formData = {
+            email: $('#email').val(),
+            password: $('#password').val(),
+            rememberMe: $('#rememberMe').is(':checked')
+        };
+        var url = 'login';
+
+        submitForm(formData, url);
+    }
+
+    function submitForm(response, url) {
+
+        var jsonData = JSON.stringify(response);
+        overlayStart();
+        $.ajax({
+            type: 'POST',
+            url: url,
+            contentType: 'application/json',
+            //dataType: 'json',
+            data: jsonData,
+            complete: function (xhr) { //this will response only from one tap
+                overlayStop();
+                global = xhr;
+                var responseJSON = JSON.parse(xhr.responseText);
+                // console.log(responseJSON.data);
+                console.log(xhr.status.toString().charAt(0));
+                if (xhr.status.toString() == '201') { //in case register by email and then by google
+                    $('#errorContainer').hide();
+                    $('#successContainer').html(responseJSON.data.message).show();
+                } else if (xhr.status.toString().charAt(0) == '2' || xhr.status.toString().charAt(0) ==
+                    '3') { //the rest response
+                    $('#errorContainer').hide();
+                    $('#successContainer').html(responseJSON.data.message).show();
+                    window.location.href = '{{base_url}}' + "/admin/items/report";
+                } else { //when error 
+                    $('#errorContainer').html(responseJSON.data.message).show();
+                    $('#password').val('');
+                    $('#errorContainer').addClass('animated shake');
+                    setTimeout(function () {
+                        $('#errorContainer').removeClass('animated shake');
+                    }, 1000);
+
+                }
+            },
+            success: function (response) {
+                console.log("success", response);
+            },
+            error: function (error) {
+                console.error("error", error);
+            }
+        });
+    }
+</script>
+{% endblock %}

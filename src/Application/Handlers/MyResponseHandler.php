@@ -26,7 +26,7 @@ class MyResponseHandler
             $responseData['success'] = 'true';
         }
 
-        $responseData['data']['statusCode'] = $statusCode;
+        $responseData['statusCode'] = $statusCode;
 
         return $responseData;
     }

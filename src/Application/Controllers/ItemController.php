@@ -2,261 +2,352 @@
 namespace App\Application\Controllers;
 
 use PDO;
+use Eloquent;
 use PDOException;
+use Slim\Views\Twig;
 use Slim\Routing\RouteContext;
+use App\Application\Models\Item;
+use App\Application\Models\ItemModel;
+use App\Application\Models\UserModel;
 use Respect\Validation\Validator as v;
+use Illuminate\Database\Schema\Blueprint;
 use App\Application\Controllers\Controller;
+use App\Application\Handlers\MyResponseHandler;
+use Illuminate\Database\Capsule\Manager as Capsule;
 use Psr\Http\Message\ResponseInterface as Response;
+use Respect\Validation\Exceptions\ValidationException;
 use \Psr\Http\Message\ServerRequestInterface as Request;
+use App\Application\Exception\CustomValidationException;
 use Respect\Validation\Exceptions\NestedValidationException;
 
 class ItemController extends Controller
 {
-    public function getItem(Request $request, Response $response)
+    private $view;
+    public function createView(Request $request, Response $response, $args)
     {
 
-        $pdo = $this->container->get(PDO::class);
-        // $token = $request->getAttribute('jwt_token');
-        // return $response->withJson(['username' => $token->username]);
+        $jwt_token   = $request->getAttribute('jwt_token');
         $queryParams = $request->getQueryParams();
-        $nameFilter  = isset($queryParams['name']) ? $queryParams['name'] : null;
-        $idFilter    = isset($queryParams['id']) ? $queryParams['id'] : null;
-        $pageSize    = isset($queryParams['pageSize']) ? (int) $queryParams['pageSize'] : 1000; // Default page size
-        $pageNumber  = isset($queryParams['pageNumber']) ? (int) $queryParams['pageNumber'] : 1; // Default page number
 
-        // Calculate the offset based on page size and number
-        $offset = ($pageNumber - 1) * $pageSize;
+        $pdo       = $this->container->get(PDO::class);
+        $userModel = new UserModel($pdo);
+        $user      = $userModel->findAll()->where("email", "=", $jwt_token->username)->execute('fetch');
 
-        try {
-            // Build the SQL query with a WHERE clause to filter by name if provided
-            $sql    = 'SELECT * FROM items';
-            $params = [];
-
-            if ($nameFilter || $idFilter) {
-                $sql .= ' WHERE';
-                if ($nameFilter) {
-
-                    $sql .= ' name LIKE :name';
-                    $params['name'] = '%' . $nameFilter . '%';
-                }
-                if ($idFilter) {
-                    $sql .= ' id = :id';
-                    $params['id'] = $idFilter;
-                }
-            }
-
-            $sql .= ' LIMIT :limit OFFSET :offset';
-
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':limit', $pageSize, PDO::PARAM_INT);
-            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-
-            if ($nameFilter) {
-                $stmt->bindParam(':name', $params['name'], PDO::PARAM_STR);
-            }
-            if ($idFilter) {
-                $stmt->bindParam(':id', $params['id'], PDO::PARAM_INT);
-            }
-
-            $stmt->execute();
-
-            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            // Handle PDO-related exceptions
-            $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        if ($user === false) {
+            $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+            $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
+            return $response;
         }
 
-        // Create a response array with different data types
-        foreach ($items as &$item) {
+        $data = [
+            'name' => $args['name'] ?? 'Guest',
+            'age' => $queryParams['age'] ?? null,
+            'email' => $jwt_token->username ?? 'Guest',
+            'token_expired' => $jwt_token->exp,
+            'base_url' => $_ENV["MYPATH"],
+            'userRole' => $user["user_role"]
+        ];
 
-            $item['name']         = (string) $item['name'];
-            $item['description']  = (string) $item['description'];
-            $item['numberValue']  = (float) $item['numberValue'];
-            $item['booleanValue'] = (bool) $item['booleanValue'];
-            $item['arrayValue']   = json_decode($item['arrayValue'], true);
-            $item['objectValue']  = json_decode($item['objectValue']);
+        $view = $this->container->get(Twig::class);
 
+        // Cache for 1 hour
+        //this only show on the header but you need to manualyy make a cron job for delete the cache page
+        $response = $response->withHeader('Cache-Control', 'public, max-age=60');
+        return $view->render($response, '/admin/items/create.twig', $data);
+    }
+    public function updateView(Request $request, Response $response, $args)
+    {
+
+        $jwt_token   = $request->getAttribute('jwt_token');
+        $queryParams = $request->getQueryParams();
+
+        $pdo       = $this->container->get(PDO::class);
+        $userModel = new UserModel($pdo);
+        $user      = $userModel->findAll()->where("email", "=", $jwt_token->username)->execute('fetch');
+
+        if ($user === false) {
+            $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+            $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
+            return $response;
         }
 
-        // return $response;
+        $data = [
+            'name' => $args['name'] ?? 'Guest',
+            'age' => $queryParams['age'] ?? null,
+            'email' => $jwt_token->username ?? 'Guest',
+            'token_expired' => $jwt_token->exp,
+            'base_url' => $_ENV["MYPATH"],
+            'userRole' => $user["user_role"]
+        ];
+        $view = $this->container->get(Twig::class);
+
+        // Cache for 1 hour
+        //this only show on the header but you need to manualyy make a cron job for delete the cache page
+        $response = $response->withHeader('Cache-Control', 'public, max-age=60');
+        return $view->render($response, '/admin/items/update.twig', $data);
+    }
+    public function reportView(Request $request, Response $response, $args)
+    {
+
+        $jwt_token   = $request->getAttribute('jwt_token');
+        $queryParams = $request->getQueryParams();
+
+        $pdo       = $this->container->get(PDO::class);
+        $userModel = new UserModel($pdo);
+        $user      = $userModel->findAll()->where("email", "=", $jwt_token->username)->execute('fetch');
+
+        if ($user === false) {
+            $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+            $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
+            return $response;
+        }
+
+        $data = [
+            'name' => $args['name'] ?? 'Guest',
+            'age' => $queryParams['age'] ?? null,
+            'email' => $jwt_token->username ?? 'Guest',
+            'token_expired' => $jwt_token->exp,
+            'base_url' => $_ENV["MYPATH"],
+            'userRole' => $user["user_role"]
+        ];
+        $view = $this->container->get(Twig::class);
+
+        // Cache for 1 hour
+        //this only show on the header but you need to manualyy make a cron job for delete the cache page
+        $response = $response->withHeader('Cache-Control', 'public, max-age=60');
+        return $view->render($response, '/admin/items/report.twig', $data);
+    }
+    public function getItem(Request $request, Response $response): Response
+    {
+
+        $pdo       = $this->container->get(PDO::class);
+        $itemModel = new ItemModel($pdo);
+
+        $queryParams = $request->getQueryParams();
+
+        $nameFilter            = $queryParams['name'] ?? null;
+        $idFilter              = $queryParams['id'] ?? null;
+        $createdDateFromFilter = $queryParams['dateFrom'] ?? (date('Y') - 100) . date('-m-d');
+        $createdDateToFilter   = $queryParams['dateTo'] ?? date('Y-m-d');
+
+        $pageSize   = $queryParams['pageSize'] ?? 1000; // Default page size
+        $pageNumber = $queryParams['pageNumber'] ?? 1; // Default page number
+
+        $items = $itemModel->getItems($idFilter, $nameFilter, $createdDateFromFilter, $createdDateToFilter, $pageSize, $pageNumber);
+
         $responseArray = [
             'pageSize' => $pageSize,
             'pageNumber' => $pageNumber,
             'data' => $items
         ];
-
-        // Encode the response data as JSON
-        $responseData = json_encode($responseArray, JSON_UNESCAPED_UNICODE);
-
-        // Write the response data to the body
-        $response->getBody()->write($responseData);
-
-        return $response->withHeader('Content-Type', 'application/json');
+        return MyResponseHandler::handleResponse($response, $responseArray);
     }
 
-    public function postItem(Request $request, Response $response)
+    public function postItem(Request $request, Response $response): Response
     {
 
-        $pdo  = $this->container->get(PDO::class);
-        $body = $request->getBody();
-        $data = json_decode($body, true);
+        $pdo       = $this->container->get(PDO::class);
+        $itemModel = new ItemModel($pdo);
 
-        // Check if the items table exists
-        $tableName   = 'items';
-        $stmt        = $pdo->query("SHOW TABLES LIKE '$tableName'");
-        $tableExists = $stmt->rowCount() > 0;
+        $data = $request->getParsedBody();
 
-        // If the table doesn't exist, create it
-        if (!$tableExists) {
-            $createTableQuery = "
-            CREATE TABLE $tableName (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                name VARCHAR(255) NOT NULL,
-                description VARCHAR(255) NOT NULL,
-                numberValue int NOT NULL,
-                booleanValue tinyint DEFAULT 0 ,
-                arrayValue text NOT NULL,
-                objectValue text NOT NULL
-            )
-        ";
-            $pdo->exec($createTableQuery);
+        self::validateData($data);
 
-        }
-        // Validate data
-        try {
-            v::key('name', v::stringType())->assert($data);
-            v::key('description', v::stringType())->assert($data);
-            v::key('numberValue', v::number())->assert($data);
-            v::key('booleanValue', v::boolType())->assert($data);
-            v::key('arrayValue', v::arrayType())->assert($data);
-            v::key('objectValue',
-                v::key('key',
-                    v::key('key2', v::intType()))
-            )->assert($data);
-        } catch (NestedValidationException $exception) {
-            $response->getBody()->write(json_encode(['messagee' => $exception->getMessages()]));
-            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
-        }
+        $itemModel->postItems($data);
 
-        try {
-            $stmt = $pdo->prepare('INSERT INTO items (name, description,numberValue,booleanValue,arrayValue,objectValue) VALUES (?,
-    ?,?,?,?,?)');
-            $stmt->execute([
-                $data['name'],
-                $data['description'],
-                $data['numberValue'],
-                $data['booleanValue'],
-                json_encode($data['arrayValue']),
-                json_encode($data['objectValue'])
-            ]);
+        $insertedItemId = $pdo->lastInsertId();
 
-            $insertedItemId = $pdo->lastInsertId();
-            // Fetch the entire row based on the auto-incremented ID
-            $stmt = $pdo->prepare("SELECT * FROM items WHERE id = :id");
-            $stmt->bindParam(':id', $insertedItemId, PDO::PARAM_INT);
-            $stmt->execute();
+        $lastInsertedData = $itemModel->getItems($insertedItemId);
 
-            $lastInsertedData = $stmt->fetch(PDO::FETCH_ASSOC);
+        $responseData['data']['message'] = 'Item created';
+        $responseData['data']['id']      = $insertedItemId;
+        $responseData['data']['data']    = $lastInsertedData;
 
-
-            $response->getBody()->write(json_encode(['message' => 'Item created', 'id' => $insertedItemId, 'data' => $lastInsertedData]));
-        } catch (PDOException $e) {
-            $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
-        }
-
-        return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
+        return MyResponseHandler::handleResponse($response, $responseData, 201);
 
     }
 
-    public function putItem(Request $request, Response $response, $args)
+    public function putItem(Request $request, Response $response, array $args): Response
     {
 
-        $pdo  = $this->container->get(PDO::class);
+        $pdo       = $this->container->get(PDO::class);
+        $itemModel = new ItemModel($pdo);
+
         $id   = $args['id'];
-        $body = $request->getBody();
-        $data = json_decode($body, true);
+        $data = $request->getParsedBody();
+
+        self::validateData($data);
 
         // Check if the ID exists before updating
-        try {
-            $stmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE id = ?');
-            $stmt->execute([$id]);
-            $count = $stmt->fetchColumn();
-            if ($count == 0) {
-                $response->getBody()->write(json_encode(['message' => 'Item not found', 'id' => $id]));
-                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
-            }
-        } catch (PDOException $e) {
-            $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        $items = $itemModel->getItems($id);
+
+        if (empty($items)) {
+            $responseData['data']['message'] = 'Item not found id:' . $id;
+
+            return MyResponseHandler::handleResponse($response, $responseData, 404);
         }
 
-        // Validate data
-        try {
-            v::key('name', v::stringType())->assert($data);
-            v::key('description', v::stringType())->assert($data);
-            v::key('numberValue', v::number())->assert($data);
-            v::key('booleanValue', v::boolType())->assert($data);
-            v::key('arrayValue', v::arrayType())->assert($data);
-            v::key('objectValue',
-                v::key('key',
-                    v::key('key2', v::intType()))
-            )->assert($data);
-        } catch (NestedValidationException $exception) {
-            $response->getBody()->write(json_encode(['messagee' => $exception->getMessages()]));
-            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
-        }
+        $itemModel->putItems($data, $id);
 
-        try {
-            $stmt = $pdo->prepare('UPDATE items SET name = ?, description = ?, numberValue = ?, booleanValue= ?, arrayValue= ?, objectValue=
-    ? WHERE id = ?');
-            $stmt->execute([
-                $data['name'],
-                $data['description'],
-                $data['numberValue'],
-                $data['booleanValue'],
-                json_encode($data['arrayValue']),
-                json_encode($data['objectValue']),
-                $id
-            ]);
-        } catch (PDOException $e) {
-            $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
-        }
-        $response->getBody()->write(json_encode(['message' => 'Item updated', 'id' => $id, 'data' => $data]));
+        $responseData['data']['message'] = 'Item updated';
+        $responseData['data']['id']      = $id;
+        $responseData['data']['data']    = $data;
 
-        return $response->withHeader('Content-Type', 'application/json');
+        return MyResponseHandler::handleResponse($response, $responseData, 200);
     }
 
-    public function deleteItem(Request $request, Response $response, $args)
+    public function deleteItem(Request $request, Response $response, array $args): Response
     {
 
-        $pdo = $this->container->get(PDO::class);
-        $id  = $args['id'];
+        $pdo       = $this->container->get(PDO::class);
+        $itemModel = new ItemModel($pdo);
+        $id        = $args['id'];
 
-        try {
-            $stmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE id = ?');
-            $stmt->execute([$id]);
-            $count = $stmt->fetchColumn();
-            if ($count == 0) {
-                $response->getBody()->write(json_encode(['message' => 'Item not found', 'id' => $id]));
-                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
-            }
-        } catch (PDOException $e) {
-            $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        $items = $itemModel->getItems($id);
+
+        if (empty($items)) {
+            $responseData['data']['message'] = 'Cannot Delete because item not found id:' . $id;
+
+            return MyResponseHandler::handleResponse($response, $responseData, 404);
         }
 
-        try {
-            $stmt = $pdo->prepare('DELETE FROM items WHERE id = ?');
-            $stmt->execute([$id]);
-        } catch (PDOException $e) {
-            $response->getBody()->write(json_encode(["message" => "PDO Exception: " . $e->getMessage()]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
-        }
-        $response->getBody()->write(json_encode(['message' => 'Item deleted', 'id' => $id]));
+        $itemModel->deleteItem($id);
 
-        return $response->withHeader('Content-Type', 'application/json');
+        $responseData['data']['message'] = 'Item deleted';
+        $responseData['data']['id']      = $id;
+
+        return MyResponseHandler::handleResponse($response, $responseData, 200);
+
+    }
+
+    private static function validateData(array $data)
+    {
+        try {
+            v::key('name', v::stringType()->notEmpty())
+                ->key('description', v::stringType()->notEmpty())
+                ->key('numberValue', v::number())
+                // ->key('booleanValue', v::boolType())
+                // ->key('arrayValue', v::arrayType())
+                // ->key(
+                //     'objectValue',
+                //     v::key(
+                //         'key',
+                //         v::key('key2', v::intType())
+                //     )
+                // )
+                ->assert($data);
+
+        } catch (NestedValidationException $e) {
+            throw new \Exception(current($e->getMessages()));
+        }
+    }
+
+    public function getAll(Request $request, Response $response)
+    {
+        $capsule = $this->container->get(Eloquent::class);
+        $items   = Item::all();
+
+        $responseData['data']['data'] = $items;
+        return MyResponseHandler::handleResponse($response, $responseData, 200);
+
+    }
+    public function insertItem(Request $request, Response $response)
+    {
+        $capsule = $this->container->get(Eloquent::class);
+        $data    = $request->getParsedBody();
+
+        if (!Capsule::schema()->hasTable('items')) {
+            // If the table does not exist, create it
+            Capsule::schema()->create('items', function (Blueprint $table) {
+                $table->id(); // Add primary key column
+                $table->string('name');
+                $table->text('description');
+                $table->integer('numberValue');
+                $table->boolean('booleanValue');
+                $table->json('arrayValue');
+                $table->json('objectValue');
+                $table->timestamps(); // Add created_at and updated_at columns
+            });
+        }
+        self::validateData($data);
+
+        $items = Item::create([
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'numberValue' => $data['numberValue'],
+            'booleanValue' => $data['booleanValue'],
+            'arrayValue' => json_encode($data['arrayValue']),
+            'objectValue' => json_encode($data['objectValue']),
+        ]);
+
+        $responseData['data']['data'] = $items;
+        $response                     = MyResponseHandler::handleResponse($response, $responseData, 200);
+
+        return $response;
+    }
+    public function changeItem(Request $request, Response $response, $args)
+    {
+        $capsule = $this->container->get(Eloquent::class);
+        $itemId  = $args['id'];
+        $data    = $request->getParsedBody();
+
+        $item = Item::find($itemId);
+
+        if (!$item) {
+            $responseData['data']['data'] = 'Data not Found';
+            $response                     = MyResponseHandler::handleResponse($response, $responseData, 200);
+            return $response;
+        }
+
+        $item->update($data);
+
+        $responseData['data']['data']    = $item;
+        $responseData['data']['message'] = "Update succesfully";
+        $response                        = MyResponseHandler::handleResponse($response, $responseData, 200);
+
+        return $response;
+    }
+    public function eraseItem(Request $request, Response $response, $args): Response
+    {
+        $capsule = $this->container->get(Eloquent::class);
+        $itemId  = $args['id'];
+        $item    = Item::find($itemId);
+
+        if (!$item) {
+            $responseData['data']['data'] = 'Data not Found';
+            $response                     = MyResponseHandler::handleResponse($response, $responseData, 200);
+            return $response;
+        }
+
+        // Delete the item
+        $item->delete();
+
+        $responseData['data']['message'] = "Item delete Successfully";
+        $response                        = MyResponseHandler::handleResponse($response, $responseData, 200);
+
+        return $response;
+    }
+    public function testMyMethod(Request $request, Response $response, $args): Response
+    {
+        $pdo       = $this->container->get(PDO::class);
+        $itemModel = new ItemModel($pdo);
+
+        $queryParams = $request->getQueryParams();
+
+        $nameFilter = $queryParams['name'] ?? null;
+        $idFilter   = $queryParams['id'] ?? null;
+        $pageSize   = $queryParams['pageSize'] ?? 1000; // Default page size
+        $pageNumber = $queryParams['pageNumber'] ?? 1; // Default page number
+
+        $sql  = $itemModel->findAll();
+        $item = $sql->where("numberValue", "=", "84")->execute();
+
+        // $item = $itemModel->find(100)->execute();
+        // var_dump($item);
+        // exit;
+        $responseData['data']['message'] = $item;
+        return MyResponseHandler::handleResponse($response, $responseData, 200);
+
+
     }
 }
