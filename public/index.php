@@ -11,6 +11,7 @@ use Slim\Factory\AppFactory;
 use Slim\Factory\ServerRequestCreatorFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../src/Application/Helpers/functions.php';
 
 session_start();
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
@@ -47,15 +48,18 @@ $middleware = require __DIR__ . '/../app/middleware.php';
 $middleware($app);
 
 
-//set base path
-
-$app->setBasePath("/my-slim");
 // Register routes
 $routes = require __DIR__ . '/../app/routes.php';
 $routes($app);
 
 /** @var SettingsInterface $settings */
 $settings = $container->get(SettingsInterface::class);
+
+//set base path
+$app->setBasePath($settings->get('basePath'));
+
+//set default timezone
+date_default_timezone_set($settings->get('defaultTimezone')['name']);
 
 $displayErrorDetails = $settings->get('displayErrorDetails');
 $logError            = $settings->get('logError');
