@@ -40,14 +40,14 @@ class AuthController extends Controller
             $userModel->createTableIfNotExist() === false ||
             $settingsModel->createTableIfNotExist($timezone) === false
         ) {
-            $responseData["data"]["message"] = $settingsModel->getLastException()->getMessage();
+            $responseData["data"]["message"] = $settingsModel->getLastException();
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
             return $response;
         }
-        $settings = $settingsModel->find(1)->execute('fetch');
+        $settings = $settingsModel->getLastSettings();
 
         if ($settings === false) {
-            $responseData["data"]["message"] = $settingsModel->getLastException()->getMessage();
+            $responseData["data"]["message"] = $settingsModel->getLastException();
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
             return $response;
         }
@@ -63,10 +63,11 @@ class AuthController extends Controller
         $data    = [
             'name' => $args['name'] ?? 'Guest',
             'age' => $queryParams['age'] ?? null,
-            'client_id' => $_ENV['CLIENT_ID'],
+            'client_id' => $settings['client_id'],
             'base_url' => $_ENV["MYPATH"],
             'registerWithGoogle' => $settings["register_with_google"],
-            'register' => $settings["register"]
+            'register' => $settings["register"],
+            'loginWithGoogle' => $settings["login_with_google"]
         ];
         $view    = $this->container->get(Twig::class);
 
@@ -93,13 +94,7 @@ class AuthController extends Controller
     {
         $pdo           = $this->container->get(PDO::class);
         $settingsModel = new SettingsModel($pdo);
-        $settings      = $settingsModel->find(1)->execute('fetch');
-
-        if ($settings === false) {
-            $responseData["data"]["message"] = $settingsModel->getLastException()->getMessage();
-            $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
-            return $response;
-        }
+        $settings      = $settingsModel->getLastSettings();
 
         if ($settings["register"] == false) {
             return $response->withHeader('Location', $_ENV['MYPATH'] . '/login?message=Register unavailable&status=false')->withStatus(302);
@@ -117,7 +112,7 @@ class AuthController extends Controller
         $data = [
             'name' => $args['name'] ?? 'Guest',
             'age' => $queryParams['age'] ?? null,
-            'client_id' => $_ENV['CLIENT_ID'],
+            'client_id' => $settings['client_id'],
             'base_url' => $_ENV["MYPATH"],
             'registerWithGoogle' => $settings["register_with_google"],
             'register' => $settings["register"]
@@ -199,7 +194,6 @@ class AuthController extends Controller
         $data = [
             'name' => $args['name'] ?? 'Guest',
             'age' => $queryParams['age'] ?? null,
-            'client_id' => $_ENV['CLIENT_ID'],
             'base_url' => $_ENV['MYPATH']
         ];
 
@@ -216,7 +210,6 @@ class AuthController extends Controller
         $data = [
             'name' => $args['name'] ?? 'Guest',
             'age' => $queryParams['age'] ?? null,
-            'client_id' => $_ENV['CLIENT_ID'],
             'base_url' => $_ENV['MYPATH']
         ];
 
@@ -226,17 +219,13 @@ class AuthController extends Controller
     }
     public function userRegister(Request $request, Response $response)
     {
-        $pdo           = $this->container->get(PDO::class);
-        $userModel     = new UserModel($pdo);
+        $pdo       = $this->container->get(PDO::class);
+        $userModel = new UserModel($pdo);
+
         $settingsModel = new SettingsModel($pdo);
 
-        $settings = $settingsModel->find(1)->execute('fetch');
+        $settings = $settingsModel->getLastSettings();
 
-        if ($settings === false) {
-            $responseData["data"]["message"] = $settingsModel->getLastException()->getMessage();
-            $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
-            return $response;
-        }
         if ($settings['register'] == false) {
             $responseData['data']['message'] = 'Register is not allowed';
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 406);
@@ -311,7 +300,7 @@ class AuthController extends Controller
         $user = $userModel->find(1)->andWhere("user_role", "=", "1")->execute();
 
         if ($user === false) {
-            $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+            $responseData['data']['message'] = $userModel->getLastException();
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
             return $response;
         }
@@ -388,11 +377,7 @@ class AuthController extends Controller
         //user have not confirmed yet
         // Check if the user exists and the password is correct.
         if ($user === false) {
-            $responseData['data']['message'] = $userModel->getLastException()->getMessage();
-            $response                        = MyResponseHandler::handleResponse($response, $responseData, 400);
-            return $response;
-        } else if (!$user) {
-            $responseData['data']['message'] = 'Please Register first';
+            $responseData['data']['message'] = $userModel->getLastException() ?? 'User Not Found! Please Register';
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 400);
             return $response;
         } else if (!$user['confirmed']) {
@@ -425,17 +410,10 @@ class AuthController extends Controller
         $userModel     = new UserModel($pdo);
         $settingsModel = new SettingsModel($pdo);
 
-        $settings = $settingsModel->find(1)->execute('fetch');
+        $settings = $settingsModel->getLastSettings();
+        $body     = $request->getParsedBody();
 
-        if ($settings === false) {
-            $responseData["data"]["message"] = $settingsModel->getLastException()->getMessage();
-            $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
-            return $response;
-        }
-
-        $body = $request->getParsedBody();
-
-        $client = new Google_Client(['client_id' => $_ENV['CLIENT_ID']]);
+        $client = new Google_Client(['client_id' => $settings['client_id']]);
 
         $decoded = $client->verifyIdToken($body['credential']);
 
@@ -455,7 +433,7 @@ class AuthController extends Controller
             $user = $userModel->find(1)->andWhere("user_role", "=", "1")->execute();
 
             if ($user === false) {
-                $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+                $responseData['data']['message'] = $userModel->getLastException();
                 $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
                 return $response;
             }
@@ -467,7 +445,7 @@ class AuthController extends Controller
             }
 
             if ($userModel->insert($insertData)->execute() === false) {
-                $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+                $responseData['data']['message'] = $userModel->getLastException();
                 $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
                 return $response;
             }
@@ -484,7 +462,7 @@ class AuthController extends Controller
 
             $updateData = ["google_sub_id" => $decoded['sub'], "confirmed" => true];
             if ($userModel->update($updateData)->where('email', '=', $decoded['email'])->execute() === false) {
-                $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+                $responseData['data']['message'] = $userModel->getLastException();
                 $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
                 return $response;
             }
@@ -544,8 +522,7 @@ class AuthController extends Controller
 
         if (
             (!isset($_COOKIE['jwt_token']) && empty($_COOKIE['jwt_token'])) &&
-            (!isset($_SESSION['jwt_token']) && empty($_SESSION['jwt_token']) &&
-                !isset($_COOKIE['g_token']) && empty($_COOKIE['g_token']))
+            (!isset($_SESSION['jwt_token']) && empty($_SESSION['jwt_token']))
         ) {
 
             if ($isBackendRequest) {
@@ -560,8 +537,6 @@ class AuthController extends Controller
         setcookie('jwt_token', '', time() - 1, '/');
         unset($_COOKIE['jwt_token']);
         unset($_SESSION['jwt_token']);
-        setcookie('g_token', '', time() - 1, '/');
-        unset($_COOKIE['g_token']);
 
         if ($isBackendRequest) {
             $responseData['data']['message'] = 'Logout Succesfully';

@@ -7,6 +7,7 @@
     href="{{assetUrl('/vendor/almasaeed2010/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
 <link rel="stylesheet"
     href="{{assetUrl('/vendor/almasaeed2010/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
+
 {% endblock %}
 {% block content %}
 <!-- Content Wrapper. Contains page content -->
@@ -117,6 +118,8 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="updateFormTitle">เพิ่มสินค้าใหม่</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+
             </div>
             <div class="modal-body">
                 <form action="" id="updateForm" method="POST" enctype='multipart/form-data'>
@@ -163,6 +166,8 @@
 <script src="{{assetUrl('/vendor/almasaeed2010/adminlte/plugins/datatables-buttons/js/buttons.colVis.min.js')}}">
 </script>
 
+
+
 <script>
     var table;
     $(function () {
@@ -171,12 +176,14 @@
         var formattedDate = currentDate.toISOString().split('T')[0];
         $("#dateFrom").val(formattedDate);
         document.getElementById("dateTo").valueAsDate = new Date();
-        //table = loadDataTable('#example1', '/my-slim/items');
+        //table = loadDataTable('#example1', '{{base_url}}' +'/items');
         $("#findBtn").on('click', function () {
             var dateFrom = $("#dateFrom").val();
             var dateTo = $("#dateTo").val();
-            url = '/my-slim/items?dateFrom=' + dateFrom + '&dateTo=' + dateTo;
+            url = '{{base_url}}' + '/items?dateFrom=' + dateFrom + '&dateTo=' + dateTo;
             table = loadDataTable("#example1", url);
+            //clear input type search every time
+            $("#example1_filter input[type=search").val('');
         });
         $("#findBtn").click();
 
@@ -207,7 +214,7 @@
                 if (result.isDenied) {
                     $.ajax({
                         type: 'DELETE',
-                        url: '/my-slim/items/' + data.id,
+                        url: '{{base_url}}' + '/items/' + data.id,
                         contentType: 'application/json',
                         success: function (response) {
                             console.log("response", response);
@@ -249,10 +256,10 @@
             var type, url;
             if (id == '') {
                 type = 'POST';
-                url = '/my-slim/items';
+                url = '{{base_url}}' + '/items';
             } else {
                 type = 'PUT';
-                url = '/my-slim/items/' + id;
+                url = '{{base_url}}' + '/items/' + id;
 
             }
             $.ajax({
@@ -313,7 +320,12 @@
                     data: 'numberValue'
                 },
                 {
-                    data: 'created_at'
+                    data: 'created_at',
+                    "render": function (data, type, row, meta) {
+                        let currentDate = new Date(data);
+                        var currentTimeZone = new Date(currentDate.getTime() + (7) * 60 * 60 * 1000);
+                        return currentTimeZone.toLocaleString();
+                    },
                 },
                 {
                     data: null,
@@ -349,7 +361,13 @@
                 "search": "ค้นหา",
                 "lengthMenu": "โชว์ _MENU_ ",
             },
-            "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+            'order': [
+                [1, 'asc']
+            ],
+
+            "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
+
+            "lengthMenu": [10, 25, 50]
         });
 
 

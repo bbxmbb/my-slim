@@ -84,7 +84,7 @@
 
                     $.ajax({
                         type: 'POST',
-                        url: '/my-slim/items',
+                        url: '{{base_url}}' + '/items',
 
                         contentType: 'application/json',
                         data: jsonData,

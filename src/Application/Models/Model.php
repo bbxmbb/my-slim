@@ -61,25 +61,49 @@ class Model
 
         return $this;
     }
-    public function where(string $column, string $operator, string $value)
+    public function where(string $column, string $operator, $value)
     {
-        $this->whereClause = " WHERE `$column` $operator ?";
-        $this->params[]    = $value;
+        if ($operator === 'in' && is_string($value)) {
+            $this->whereClause = " WHERE `$column` $operator ($value)";
+        } elseif ($operator === 'in' && is_array($value)) {
+            $placeholders      = rtrim(str_repeat('?, ', count($value)), ', ');
+            $this->whereClause = " WHERE `$column` $operator ($placeholders)";
+            $this->params      = array_merge($this->params, $value);
+        } else {
+            $this->whereClause = " WHERE `$column` $operator ?";
+            $this->params[]    = $value;
+        }
 
         return $this;
     }
     public function andWhere(string $column, string $operator, string $value)
     {
-        $this->whereClause .= " AND `$column` $operator ?";
-        $this->params[]    = $value;
 
+        if ($operator === 'in' && is_string($value)) {
+            $this->whereClause = " AND `$column` $operator ($value)";
+        } elseif ($operator === 'in' && is_array($value)) {
+            $placeholders      = rtrim(str_repeat('?, ', count($value)), ', ');
+            $this->whereClause = " AND `$column` $operator ($placeholders)";
+            $this->params      = array_merge($this->params, $value);
+        } else {
+            $this->whereClause .= " AND `$column` $operator ?";
+            $this->params[]    = $value;
+        }
         return $this;
     }
 
     public function orWhere(string $column, string $operator, string $value)
     {
-        $this->whereClause .= " OR `$column` $operator ?";
-        $this->params[]    = $value;
+        if ($operator === 'in' && is_string($value)) {
+            $this->whereClause = " OR `$column` $operator ($value)";
+        } elseif ($operator === 'in' && is_array($value)) {
+            $placeholders      = rtrim(str_repeat('?, ', count($value)), ', ');
+            $this->whereClause = " OR `$column` $operator ($placeholders)";
+            $this->params      = array_merge($this->params, $value);
+        } else {
+            $this->whereClause .= " OR `$column` $operator ?";
+            $this->params[]    = $value;
+        }
 
         return $this;
     }
@@ -114,6 +138,7 @@ class Model
 
         try {
             $stmt->execute();
+
             if ($fetch == 'fetchAll') {
 
                 $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -121,7 +146,7 @@ class Model
                 $data = $stmt->fetch(PDO::FETCH_ASSOC);
             }
         } catch (PDOException $e) {
-            $this->lastException = $e;
+            $this->lastException = $e->getMessage();
             error_log($e->getMessage());
 
             return false;

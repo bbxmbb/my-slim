@@ -20,7 +20,6 @@ return function (ContainerBuilder $containerBuilder) {
                     'name' => 'Asia/Bangkok',
                     'time' => '+07:00'
                 ],
-                'basePath' => '/my-slim',
                 'logger' => [
                     'name' => 'my-slim',
                     'path' => isset($_ENV['docker']) ? 'php://stdout' : __DIR__ . '/../logs/app.log',
@@ -43,26 +42,19 @@ return function (ContainerBuilder $containerBuilder) {
                         'debug' => true,
                     ],
                 ],
-                // 'mailer' => [
-                //     'host' => 'smtp.hostinger.com',
-                //     'port' => 465,
-                //     'username' => 'info@slim.bbxmbb.com',
-                //     'password' => 'Sbomb2535M@',
-                //     'encryption' => 'ssl',
-                //     'from' => [
-                //         'email' => 'info@slim.bbxmbb.com',
-                //         'name' => 'bbxmbb'
-                //     ]
-                // ],
                 'mailer' => [
+                    //for hostinger
+                    // 'host' => 'smtp.hostinger.com',
+                    // 'port' => 465,
+                    // 'encryption' => 'ssl',
                     'host' => 'smtp.gmail.com',
                     'port' => 587,
-                    'username' => 'bbombb.bbombb@gmail.com',
-                    'password' => 'derc qhgr kkgf fsdv',
                     'encryption' => 'false',
+                    'username' => $_ENV["MAIN_EMAIL"],
+                    'password' => $_ENV["MAIN_PASSWORD"],
                     'from' => [
-                        'email' => 'bbombb.bbombb@gmail.com',
-                        'name' => 'bbxmbb'
+                        'email' => $_ENV["MAIN_EMAIL"],
+                        'name' => $_ENV["MAIN_NAME"]
                     ]
                 ],
                 'redis' => [

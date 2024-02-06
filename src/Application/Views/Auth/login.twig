@@ -123,17 +123,18 @@ Signin
             <div class="g-signin2" data-onsuccess="onSignIn"></div>
 
             <div class="text-center my-2">
-
+                {% if loginWithGoogle==true %}
                 <div class="d-flex justify-content-center mt-2">
                     {# <div><a
-                            href="https://accounts.google.com/gsi/select?client_id=622209003516-c2splslf6r7gc38vks1hkvjki12pfse4.apps.googleusercontent.com&ux_mode=redirect&login_uri=http%3A%2F%2Flocalhost%2Fmy-slim%2FloginWithGoogle&ui_mode=bottom_sheet&as=vZwGkMI7NFbCPq%2BCiv%2FjhQ&g_csrf_token=de5fd73e5bc486a&origin=http%3A%2F%2Flocalhost">
+                            href="https://accounts.google.com/gsi/select?client_id='{{client_id}}'&ux_mode=redirect&login_uri=http%3A%2F%2Flocalhost%2Fmy-slim%2FloginWithGoogle&ui_mode=bottom_sheet&as=vZwGkMI7NFbCPq%2BCiv%2FjhQ&g_csrf_token=de5fd73e5bc486a&origin=http%3A%2F%2Flocalhost">
                             <img class="btn rounded-1 border p-2" style="width:4rem" 
                                 src="public/assets/google_logo_image.png" alt="google login button">
                         </a>
                     </div> #}
                     <div id="googleLoginBtn"></div>
+
                     {# <div id="g_id_onload"
-                        data-client_id="622209003516-c2splslf6r7gc38vks1hkvjki12pfse4.apps.googleusercontent.com"
+                        data-client_id='{{client_id}}'
                         data-context="signin" data-ux_mode="redirect"
                         data-login_uri="https://slim.bbxmbb.com/userLoginWithGoogle" data-close_on_tap_outside="false"
                         data-itp_support="true">
@@ -154,6 +155,7 @@ Signin
                         </div>
                     </div>
                 </div>
+                {% endif %}
             </div>
             <div class="form-floating my-2">
                 <input type="email" name="email" id="email" class="form-control " id="floatingInput"
@@ -200,25 +202,28 @@ Signin
 <script src="https://apis.google.com/js/platform.js" async defer></script>
 <script>
     window.onload = function () {
-        google.accounts.id.initialize({
+        if ('{{loginWithGoogle}}' == true) {
+            google.accounts.id.initialize({
 
-            client_id: "622209003516-c2splslf6r7gc38vks1hkvjki12pfse4.apps.googleusercontent.com",
-            callback: handleCredentialResponse,
-            cancel_on_tap_outside: false,
-            ux_mode: "redirect",
-            //redirect_uri: '{{base_url}}' + "/admin/items/report",
-            login_uri: '{{base_url}}' + "/loginWithGoogle"
-        });
-        google.accounts.id.renderButton(
-            document.getElementById("googleLoginBtn"), {
-                type: "icon",
-                theme: "outline",
-                size: "large",
-                text: "continue_with",
-                'width': 300,
-            } // customization attributes
-        );
-        google.accounts.id.prompt(); // also display the One Tap dialog
+                client_id: '{{client_id}}',
+                callback: handleCredentialResponse,
+                cancel_on_tap_outside: false,
+                ux_mode: "redirect",
+                //redirect_uri: '{{base_url}}' + "/admin/items/report",
+                login_uri: '{{base_url}}' + "/loginWithGoogle"
+            });
+            google.accounts.id.renderButton(
+                document.getElementById("googleLoginBtn"), {
+                    type: "icon",
+                    theme: "outline",
+                    size: "large",
+                    text: "continue_with",
+                    'width': 300,
+                } // customization attributes
+            );
+            google.accounts.id.prompt(); // also display the One Tap dialog
+
+        }
 
 
     }

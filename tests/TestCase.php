@@ -58,7 +58,9 @@ class TestCase extends PHPUnit_TestCase
         $middleware = require __DIR__ . '/../app/middleware.php';
         $middleware($app);
 
-        // $app->setBasePath("/my-slim");
+
+        //set base path
+        $app->setBasePath($_ENV["BASEPATH"]);
         // Register routes
         $routes = require __DIR__ . '/../app/routes.php';
         $routes($app);

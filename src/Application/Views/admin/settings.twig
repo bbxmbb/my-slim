@@ -33,7 +33,10 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">ตั้งค่า</h5>
-
+                            <div class="row mt-3 d-flex justify-content-end ">
+                                <button class="btn btn-primary btn-submit" style="max-width:150px" id="submit"
+                                    type="button">บันทึก</button>
+                            </div>
                             <p class="card-text">
                                 <form action="{{assetUrl('items')}}" id="mainForm" method="POST">
                                     <div class="form-check form-switch ms-3">
@@ -42,14 +45,47 @@
                                         <label class="form-check-label" for="allowRegister">สมัครสมาชิค
                                         </label>
                                     </div>
-                                    <div class="form-check form-switch ms-3">
-                                        <input class="form-check-input" type="checkbox" role="switch"
-                                            id="allowRegisterFromGoogle">
-                                        <label class="form-check-label" for="allowRegisterFromGoogle">สมัครสมาชิคด้วย
-                                            Google
-                                        </label>
+                                    <hr>
+                                    <div class="container">
+                                        <div class="form-check form-switch ms-3">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                id="allowRegisterFromGoogle">
+                                            <label class="form-check-label"
+                                                for="allowRegisterFromGoogle">สมัครสมาชิคด้วย
+                                                Google
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-switch ms-3">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                id="loginWithGoogle">
+                                            <label class="form-check-label" for="loginWithGoogle">ล๊อคอินด้วย
+                                                Google
+                                            </label>
+                                        </div>
+
+                                        <div class="container" id="googleCode" style="display:none">
+                                            <div class="row mb-2">
+                                                <label for="clientId" class="col-sm-2 col-form-label">Client Id</label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" name="clientId" id="clientId"
+                                                        class="form-control" value="{{clientId}}">
+                                                </div>
+                                            </div>
+                                            <div class="row mb-2">
+                                                <label for="clientSecret" class="col-sm-2 col-form-label">Client
+                                                    Secret</label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" name="clientSecret" id="clientSecret"
+                                                        value="{{clientSecret}}" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
-                                    <button class="btn btn-primary" id="submit" type="button">บันทึก</button>
+                                    <div class="row mt-3 d-flex justify-content-end ">
+                                        <button class="btn btn-primary btn-submit" style="max-width:150px" id="submit"
+                                            type="button">บันทึก</button>
+                                    </div>
                                 </form>
                             </p>
                         </div>
@@ -69,56 +105,138 @@
     $(document).ready(function () {
         $("#allowRegister").prop('checked', Number('{{allowRegister}}'));
         $("#allowRegisterFromGoogle").prop('checked', Number('{{allowRegisterWithGoogle}}'));
+        $("#loginWithGoogle").prop('checked', Number('{{loginWithGoogle}}'));
 
-        $("#submit").on("click", function () {
-            Swal.fire({
-                title: "ยินยันการบันทึก",
-                showCancelButton: true,
-                confirmButtonText: "ยืนยัน",
-                cancelButtonText: `ยกเลิก`,
-                icon: "info"
-            }).then((result) => {
-                event.preventDefault();
-                /* Read more about isConfirmed, isDenied below */
-                if (result.isConfirmed) {
-                    var formData = {
-                        register: $('#allowRegister').prop('checked'),
-                        registerWithGoogle: $('#allowRegisterFromGoogle').prop('checked'),
-                    };
-                    var jsonData = JSON.stringify(formData);
+        $("#allowRegisterFromGoogle").change(function () {
+            googleCodeToggle();
+        });
+        $("#loginWithGoogle").change(function () {
+            googleCodeToggle();
+        });
+        googleCodeToggle();
+        submitForm();
 
-                    $.ajax({
-                        type: 'POST',
-                        url: '{{base_url}}' + '/updateSettings',
-
-                        contentType: 'application/json',
-                        data: jsonData,
-                        success: function (response) {
-                            //responseJSON = JSON.parse(response.responseText);
-                            console.log("response", response);
-                            Swal.fire({
-                                title: "บันทึกสำเร็จ",
-                                text: response.data.message,
-                                showCloseButton: true,
-                                showConfirmButton: false,
-                                icon: "success"
-                            });
-                        },
-                        error: function (error) {
-                            errorJSON = JSON.parse(error.responseText);
-                            console.error("error", errorJSON);
-                            Swal.fire({
-                                title: "ไม่สำเร็จ",
-                                text: errorJSON.error.description,
-                                showCloseButton: true,
-                                showConfirmButton: false,
-                                icon: "error"
-                            })
-                        }
-                    });
-                }
-            });
-        })
     })
+
+    function googleCodeToggle() {
+        if ($("#loginWithGoogle").prop('checked') == false && $("#allowRegisterFromGoogle").prop('checked') ==
+            false) {
+            $("#googleCode").hide();
+        } else {
+            $("#googleCode").show();
+        }
+    }
+
+
+
+    function submitForm() {
+        $(".btn-submit").on("click", function () {
+            if ($("#loginWithGoogle").prop('checked') == false && $("#allowRegisterFromGoogle").prop(
+                    'checked') ==
+                false) {
+                postData();
+
+            } else {
+                googleClientIdCheck();
+            }
+        })
+    }
+
+    function googleClientIdCheck() {
+        event.preventDefault();
+        var formData = {
+            client_id: $("#clientId").val(),
+            client_secret: $("#clientSecret").val(),
+            grant_type: 'authorization_code',
+            code: new Date()
+
+        };
+        var jsonData = JSON.stringify(formData);
+
+        $.ajax({
+            type: 'POST',
+            url: 'https://oauth2.googleapis.com/token',
+
+            contentType: 'application/json',
+            data: jsonData,
+            complete: function (xhr) { //this will response only from one tap
+                global = xhr;
+
+                error_description = xhr.responseJSON.error_description;
+                console.log(error_description);
+                if (error_description != "Malformed auth code.") {
+                    Swal.fire({
+                        title: "บันทึกไม่สำเร็จเนื่องจาก",
+                        text: "Client Id หรือ Client Secret ไม่ถูกต้อง",
+                        showCloseButton: true,
+                        showConfirmButton: false,
+                        icon: "error"
+                    })
+                } else {
+
+                    postData();
+
+                }
+            },
+        });
+    }
+
+    function postData() {
+        Swal.fire({
+            title: "ยินยันการบันทึก",
+            showCancelButton: true,
+            confirmButtonText: "ยืนยัน",
+            cancelButtonText: `ยกเลิก`,
+            icon: "info"
+        }).then((result) => {
+            event.preventDefault();
+            /* Read more about isConfirmed, isDenied below */
+            if (result.isConfirmed) {
+                var formData = {
+                    register: $('#allowRegister').prop('checked'),
+                    registerWithGoogle: $('#allowRegisterFromGoogle').prop('checked'),
+                    loginWithGoogle: $("#loginWithGoogle").prop('checked'),
+                    clientId: $("#clientId").val(),
+                    clientSecret: $("#clientSecret").val(),
+                    user: '{{email}}'
+                };
+                var jsonData = JSON.stringify(formData);
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{{base_url}}' + '/updateSettings',
+
+                    contentType: 'application/json',
+                    data: jsonData,
+                    success: function (response) {
+                        //responseJSON = JSON.parse(response.responseText);
+                        console.log("response", response);
+                        Swal.fire({
+                            title: "บันทึกสำเร็จ",
+                            text: response.data.message,
+                            showCloseButton: true,
+                            showConfirmButton: false,
+                            icon: "success",
+                            timer: 1500,
+                        });
+                    },
+                    error: function (error) {
+                        errorJSON = JSON.parse(error.responseText);
+                        console.error("error", errorJSON);
+                        Swal.fire({
+                            title: "ไม่สำเร็จ",
+                            text: errorJSON.error.description,
+                            showCloseButton: true,
+                            showConfirmButton: false,
+                            icon: "error"
+                        })
+                    }
+
+
+                });
+            }
+        });
+
+    }
 </script>
 {% endblock %}

@@ -31,20 +31,13 @@ class SettingController extends Controller
         $user          = $userModel->findAll()->where("email", "=", $jwt_token->username)->execute('fetch');
 
         if ($user === false) {
-            $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+            $responseData['data']['message'] = $userModel->getLastException();
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
             return $response;
         }
 
-        $settings = $settingsModel->find(1)->execute('fetch');
-
-        if ($settings === false) {
-            $responseData['data']['message'] = $settingsModel->getLastException()->getMessage();
-            $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
-            return $response;
-        }
-
-        $data = [
+        $settings = $settingsModel->getLastSettings();
+        $data     = [
             'name' => $args['name'] ?? 'Guest',
             'age' => $queryParams['age'] ?? null,
             'email' => $jwt_token->username ?? 'Guest',
@@ -52,9 +45,12 @@ class SettingController extends Controller
             'base_url' => $_ENV["MYPATH"],
             'allowRegister' => $settings["register"],
             'allowRegisterWithGoogle' => $settings["register_with_google"],
+            'loginWithGoogle' => $settings["login_with_google"],
+            'clientId' => $settings["client_id"],
+            'clientSecret' => $settings["client_secret"],
             'userRole' => $user["user_role"]
         ];
-        $view = $this->container->get(Twig::class);
+        $view     = $this->container->get(Twig::class);
 
         // Cache for 1 hour
         //this only show on the header but you need to manualyy make a cron job for delete the cache page
@@ -64,6 +60,7 @@ class SettingController extends Controller
     public function updateSettings(Request $request, Response $response, array $args): Response
     {
 
+        $jwt_token     = $request->getAttribute('jwt_token');
         $pdo           = $this->container->get(PDO::class);
         $settingsModel = new SettingsModel($pdo);
 
@@ -75,15 +72,29 @@ class SettingController extends Controller
         } catch (NestedValidationException $e) {
             throw new \Exception(current($e->getMessages()));
         }
+        $settings = $settingsModel->getLastSettings();
+
         $updateData = [
             'register' => $data['register'],
             'register_with_google' => $data['registerWithGoogle'],
-            'updated_at' => date('Y-m-d H:i:s')
+            'login_with_google' => $data["loginWithGoogle"],
+            'client_id' => $data["clientId"],
+            'client_secret' => $data["clientSecret"],
         ];
-        if ($settingsModel->update($updateData)->where("id", "=", "1")->execute() === false) {
-            $responseData['data']['message'] = $settingsModel->getLastException()->getMessage();
-            $response                        = responseFunc($response, $responseData, 500);
-            return $response;
+
+        foreach ($settings as $key => $value) {
+            if (isset($updateData[$key]) && $updateData[$key] != $value) {
+                $dataToInsert = [
+                    'key_name' => $key,
+                    'value' => $updateData[$key],
+                    'user' => $jwt_token->username
+                ];
+                if ($settingsModel->insert($dataToInsert)->execute() === false) {
+                    $responseData['data']['message'] = $settingsModel->getLastException();
+                    $response                        = responseFunc($response, $responseData, 500);
+                    return $response;
+                }
+            }
         }
 
         $responseData['data']['message'] = 'Settings Updated';

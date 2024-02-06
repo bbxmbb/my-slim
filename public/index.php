@@ -56,7 +56,7 @@ $routes($app);
 $settings = $container->get(SettingsInterface::class);
 
 //set base path
-$app->setBasePath($settings->get('basePath'));
+$app->setBasePath($_ENV["BASEPATH"]);
 
 //set default timezone
 date_default_timezone_set($settings->get('defaultTimezone')['name']);

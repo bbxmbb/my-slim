@@ -34,7 +34,7 @@ class ItemController extends Controller
         $user      = $userModel->findAll()->where("email", "=", $jwt_token->username)->execute('fetch');
 
         if ($user === false) {
-            $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+            $responseData['data']['message'] = $userModel->getLastException();
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
             return $response;
         }
@@ -66,7 +66,7 @@ class ItemController extends Controller
         $user      = $userModel->findAll()->where("email", "=", $jwt_token->username)->execute('fetch');
 
         if ($user === false) {
-            $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+            $responseData['data']['message'] = $userModel->getLastException();
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
             return $response;
         }
@@ -97,7 +97,7 @@ class ItemController extends Controller
         $user      = $userModel->findAll()->where("email", "=", $jwt_token->username)->execute('fetch');
 
         if ($user === false) {
-            $responseData['data']['message'] = $userModel->getLastException()->getMessage();
+            $responseData['data']['message'] = $userModel->getLastException();
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
             return $response;
         }

@@ -26,7 +26,7 @@ return function (App $app) {
     $app->get('/', function (Request $request, Response $response) {
         // session_start();
         $session = $request->getAttribute('session');
-        $response->getBody()->write(json_encode(["uri" => $request->getUri()]));
+        $response->getBody()->write("Hello From Twig and Slim. If you see this code mean that it is work!");
         return $response;
     });
 
@@ -133,7 +133,9 @@ return function (App $app) {
 
     })->add(LoggerMiddleware::class)->add(CookieMiddleware::class);
 
-    $app->post('/updateSettings', SettingController::class . ':updateSettings');
+    $app->post('/updateSettings', SettingController::class . ':updateSettings')
+        ->add(LoggerMiddleware::class)->add(CookieMiddleware::class);
+    ;
     $app->get('/testsendmail', function ($request, $response, $args) {
 
         $mailerConfig = $this->get(SettingsInterface::class)->get('mailer');
@@ -141,7 +143,7 @@ return function (App $app) {
         $mail = $this->get(PHPMailer::class);
 
         $confirmationCode = bin2hex(random_bytes(32));
-        $confirmationLink = 'http://localhost/confirm/' . $confirmationCode;
+        $confirmationLink = $_ENV["MYPATH"] . '/confirm/' . $confirmationCode;
 
         $from_email = $mailerConfig['from']['email'];
         $from_name  = $mailerConfig['from']['name'];
