@@ -120,6 +120,22 @@ Register
             <div class="container">
 
             </div>
+            {% if registerWithGoogle==true %}
+            <div class="d-flex justify-content-center mt-2">
+                <div id="googleLoginBtn"></div>
+            </div>
+            <div class="container my-3">
+                <div class="row">
+                    <div class="col">
+                        <hr>
+                    </div>
+                    <div class="col">หรือ</div>
+                    <div class="col">
+                        <hr>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             <div class="form-floating my-2">
                 <input type="email" name="email" id="email" class="form-control " id="floatingInput"
                     placeholder="name@example.com">
@@ -164,7 +180,7 @@ Register
 <script src="https://apis.google.com/js/platform.js" async defer></script> #}
 <script>
     window.onload = function () {
-        if ('{{registerWithGoogle}}' === true) {
+        if ('{{registerWithGoogle}}' == true) {
             google.accounts.id.initialize({
 
                 client_id: '{{client_id}}',

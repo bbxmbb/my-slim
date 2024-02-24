@@ -58,9 +58,6 @@ $settings = $container->get(SettingsInterface::class);
 //set base path
 $app->setBasePath($_ENV["BASEPATH"]);
 
-//set default timezone
-date_default_timezone_set($settings->get('defaultTimezone')['name']);
-
 $displayErrorDetails = $settings->get('displayErrorDetails');
 $logError            = $settings->get('logError');
 $logErrorDetails     = $settings->get('logErrorDetails');

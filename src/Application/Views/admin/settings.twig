@@ -82,6 +82,7 @@
                                         </div>
 
                                     </div>
+                                    <div id="googleLoginBtn"></div>
                                     <div class="row mt-3 d-flex justify-content-end ">
                                         <button class="btn btn-primary btn-submit" style="max-width:150px" id="submit"
                                             type="button">บันทึก</button>
@@ -101,6 +102,9 @@
 <!-- /.content-wrapper -->
 {% endblock %}
 {% block scripts %}
+<script defer src="https://accounts.google.com/gsi/client" async></script>
+
+<script src="https://apis.google.com/js/platform.js" async defer></script>
 <script>
     $(document).ready(function () {
         $("#allowRegister").prop('checked', Number('{{allowRegister}}'));
@@ -115,8 +119,8 @@
         });
         googleCodeToggle();
         submitForm();
+    });
 
-    })
 
     function googleCodeToggle() {
         if ($("#loginWithGoogle").prop('checked') == false && $("#allowRegisterFromGoogle").prop('checked') ==
@@ -173,13 +177,12 @@
                         icon: "error"
                     })
                 } else {
-
                     postData();
-
                 }
             },
         });
     }
+
 
     function postData() {
         Swal.fire({

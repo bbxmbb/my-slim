@@ -76,7 +76,7 @@ class Model
 
         return $this;
     }
-    public function andWhere(string $column, string $operator, string $value)
+    public function andWhere(string $column, string $operator, $value)
     {
 
         if ($operator === 'in' && is_string($value)) {
