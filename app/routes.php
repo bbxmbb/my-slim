@@ -98,7 +98,7 @@ return function (App $app) {
         $group->delete('/{id}', ItemController::class . ':deleteItem');
         $group->delete('/delete/{id}', ItemController::class . ':eraseItem');
         $group->get('/test', ItemController::class . ':testMyMethod');
-    })->add(LoggerMiddleware::class)->add(CookieMiddleware::class);
+    })->add(CookieMiddleware::class);
 
     $app->group('', function (Group $group) {
 
@@ -116,7 +116,7 @@ return function (App $app) {
         $group->post('/reset-password', AuthController::class . ':resetPassword');
         $group->post('/resetPasswordConfirm', AuthController::class . ':resetPasswordConfirm');
 
-    })->add(LoggerMiddleware::class);
+    });
 
     $app->group('/admin', function (Group $group) {
 
@@ -131,10 +131,10 @@ return function (App $app) {
         });
 
 
-    })->add(LoggerMiddleware::class)->add(CookieMiddleware::class);
+    })->add(CookieMiddleware::class);
 
     $app->post('/updateSettings', SettingController::class . ':updateSettings')
-        ->add(LoggerMiddleware::class)->add(CookieMiddleware::class);
+        ->add(CookieMiddleware::class);
     ;
     $app->get('/testsendmail', function ($request, $response, $args) {
 
@@ -186,5 +186,5 @@ return function (App $app) {
     //     return $response;
     // });
 
-    $app->get('/{routes:.*}', NotFoundController::class . ':index')->add(LoggerMiddleware::class);
+    $app->get('/{routes:.*}', NotFoundController::class . ':index');
 };
