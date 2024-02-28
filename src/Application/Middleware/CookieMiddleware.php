@@ -32,19 +32,31 @@ class CookieMiddleware implements Middleware
             try {
                 $decoded = JWT::decode($token, new Key($_ENV['SECRET_KEY'], 'HS256')); // Replace with your actual JWT secret
             } catch (Exception $e) {
-                return $this->expiredToken($response, $isBackendRequest);
+                return $this->expiredToken($response, $isBackendRequest, $request);
             }
 
             $request = $request->withAttribute('jwt_token', $decoded ?? null);
             return $handler->handle($request);
 
         } else {
-            return $this->expiredToken($response, $isBackendRequest);
+            return $this->expiredToken($response, $isBackendRequest, $request);
         }
     }
 
-    private function expiredToken($response, $isBackendRequest)
+    private function expiredToken($response, $isBackendRequest, $request)
     {
+
+        // Get current URL path
+        $path = $request->getUri()->getPath();
+
+        // Get query string
+        $query = $request->getUri()->getQuery();
+
+        // Combine path and query string
+        $redirect_url = $path;
+        if (!empty($query)) {
+            $redirect_url .= '?' . $query;
+        }
 
         setcookie('jwt_token', '', time() - 1, '/');
         unset($_COOKIE['jwt_token']);
@@ -56,7 +68,7 @@ class CookieMiddleware implements Middleware
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 401);
             return $response;
         } else {
-            return $response->withStatus(302)->withHeader("Location", $_ENV["MYPATH"] . '/login?message=Token has Expired Please Login Again&status=false');
+            return $response->withStatus(302)->withHeader("Location", $_ENV["MYPATH"] . '/login?message=Token has Expired Please Login Again&status=false&redirect_url=' . $redirect_url);
 
         }
     }

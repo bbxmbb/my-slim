@@ -232,13 +232,13 @@ Signin
         var url = 'loginWithGoogle';
         submitForm(response, url);
     }
-
-    var global;
+    var global, redirect_url;
     $(document).ready(function () {
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const message = urlParams.get('message');
         const status = urlParams.get('status');
+        redirect_url = urlParams.get('redirect_url');
         if (message != null) {
             if (status == 'true') {
 
@@ -295,7 +295,11 @@ Signin
                     '3') { //the rest response
                     $('#errorContainer').hide();
                     $('#successContainer').html(responseJSON.data.message).show();
-                    window.location.href = '{{base_url}}' + "/admin/items/report";
+                    if (redirect_url == null) {
+                        window.location.href = '{{base_url}}' + "/admin/repairs/report";
+                    } else {
+                        window.location.href = '{{base_url}}' + redirect_url;
+                    }
                 } else { //when error 
                     $('#errorContainer').html(responseJSON.data.message).show();
                     $('#password').val('');
