@@ -201,7 +201,11 @@ Signin
 
 <script src="https://apis.google.com/js/platform.js" async defer></script>
 <script>
+    var global, redirect_url;
     window.onload = function () {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        redirect_url = urlParams.get('redirect_url');
         if ('{{loginWithGoogle}}' == true) {
             google.accounts.id.initialize({
 
@@ -209,8 +213,7 @@ Signin
                 callback: handleCredentialResponse,
                 cancel_on_tap_outside: false,
                 ux_mode: "redirect",
-                //redirect_uri: '{{base_url}}' + "/admin/items/report",
-                login_uri: '{{base_url}}' + "/loginWithGoogle"
+                login_uri: '{{base_url}}' + '/loginWithGoogle?redirect_url=' + redirect_url
             });
             google.accounts.id.renderButton(
                 document.getElementById("googleLoginBtn"), {
@@ -232,7 +235,6 @@ Signin
         var url = 'loginWithGoogle';
         submitForm(response, url);
     }
-    var global, redirect_url;
     $(document).ready(function () {
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
@@ -296,7 +298,7 @@ Signin
                     $('#errorContainer').hide();
                     $('#successContainer').html(responseJSON.data.message).show();
                     if (redirect_url == null) {
-                        window.location.href = '{{base_url}}' + "/admin/repairs/report";
+                        window.location.href = '{{base_url}}' + "/admin/items/report";
                     } else {
                         window.location.href = '{{base_url}}' + redirect_url;
                     }

@@ -45,9 +45,8 @@ class CookieMiddleware implements Middleware
 
     private function expiredToken($response, $isBackendRequest, $request)
     {
-
         // Get current URL path
-        $path = $request->getUri()->getPath();
+        $path = substr($request->getUri()->getPath(), strlen($_ENV["BASEPATH"]));
 
         // Get query string
         $query = $request->getUri()->getQuery();

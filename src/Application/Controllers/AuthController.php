@@ -410,8 +410,10 @@ class AuthController extends Controller
         $userModel     = new UserModel($pdo);
         $settingsModel = new SettingsModel($pdo);
 
-        $settings = $settingsModel->getLastSettings();
-        $body     = $request->getParsedBody();
+        $queryParams  = $request->getQueryParams();
+        $redirect_url = $queryParams['redirect_url'] ?? '';
+        $settings     = $settingsModel->getLastSettings();
+        $body         = $request->getParsedBody();
 
         $client = new Google_Client(['client_id' => $settings['client_id']]);
 
@@ -468,7 +470,7 @@ class AuthController extends Controller
             }
 
             $responseData['data']['message'] = 'Register ' . $decoded['email'] . ' with Google Acccount Successfully ';
-            return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 201);
+            return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 201, $redirect_url);
 
         }
 
@@ -479,10 +481,10 @@ class AuthController extends Controller
         $responseData['data']['message'] = 'Login Successfully';
         $responseData['data']['jwt']     = $token;
 
-        return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 200, 'admin');
+        return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 200, $redirect_url, 'admin', );
 
     }
-    private function responseOnGoogleLogin($response, $select_by, $responseData, $statusCode, $path = 'login')
+    private function responseOnGoogleLogin($response, $select_by, $responseData, $statusCode, $redirect_url, $path = 'login')
     {
         if ($select_by == "user") { //come from one tap
 
@@ -495,7 +497,13 @@ class AuthController extends Controller
 
                 $url = '/login?message=' . $responseData['data']['message'] . '&status=' . $status;
             } else {
-                $url = '/admin/items/report';
+
+                if ($redirect_url == '') {
+
+                    $url = '/admin/items/report';
+                } else {
+                    $url = $redirect_url;
+                }
             }
 
             //status Code must always be 302 when redirect!
