@@ -29,7 +29,7 @@
     "google/apiclient": "^2.15",
     "illuminate/database": "^10.37",
     "monolog/monolog": "^2.8",
-    "mpdf/mpdf": "^6.1",
+    "mpdf/mpdf": "^8.2",
     "php-di/php-di": "^6.4",
     "phpmailer/phpmailer": "^6.9",
     "respect/validation": "^2.2",
