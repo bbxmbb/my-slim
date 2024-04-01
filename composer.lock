@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2781d057faea4ec7cfa20dd89b3ec558",
+    "content-hash": "bd60e337666a5af1e40d1c2f9d58b9aa",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -2886,16 +2886,16 @@
         },
         {
             "name": "respect/validation",
-            "version": "2.3.2",
+            "version": "2.3.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Respect/Validation.git",
-                "reference": "5b7ea866e436353b356572bcaf2f006df5a7aec1"
+                "reference": "263ae118fb9b0d3bc6692eb2154cd851deff7932"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Respect/Validation/zipball/5b7ea866e436353b356572bcaf2f006df5a7aec1",
-                "reference": "5b7ea866e436353b356572bcaf2f006df5a7aec1",
+                "url": "https://api.github.com/repos/Respect/Validation/zipball/263ae118fb9b0d3bc6692eb2154cd851deff7932",
+                "reference": "263ae118fb9b0d3bc6692eb2154cd851deff7932",
                 "shasum": ""
             },
             "require": {
@@ -2948,9 +2948,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Respect/Validation/issues",
-                "source": "https://github.com/Respect/Validation/tree/2.3.2"
+                "source": "https://github.com/Respect/Validation/tree/2.3.6"
             },
-            "time": "2024-02-02T15:55:37+00:00"
+            "time": "2024-03-24T18:49:24+00:00"
         },
         {
             "name": "setasign/fpdi",
@@ -4064,5 +4064,5 @@
         "ext-json": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
