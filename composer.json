@@ -26,7 +26,7 @@
     "ext-json": "*",
     "almasaeed2010/adminlte": "~3.2",
     "firebase/php-jwt": "^6.10",
-    "google/apiclient": "^2.15",
+    "google/apiclient": "^2.16",
     "illuminate/database": "^10.37",
     "monolog/monolog": "^2.8",
     "mpdf/mpdf": "^6.1",
