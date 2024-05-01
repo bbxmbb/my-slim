@@ -28,7 +28,7 @@
     "firebase/php-jwt": "^6.10",
     "google/apiclient": "^2.15",
     "illuminate/database": "^10.37",
-    "monolog/monolog": "^2.8",
+    "monolog/monolog": "^3.6",
     "mpdf/mpdf": "^6.1",
     "php-di/php-di": "^6.4",
     "phpmailer/phpmailer": "^6.9",
