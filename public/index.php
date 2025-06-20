@@ -23,6 +23,16 @@ if (false) { // Should be set to true in production
 	$containerBuilder->enableCompilation(__DIR__ . '/../var/cache');
 }
 
+//create upload folder if it not exist
+$uploadsDir = __DIR__ . '/uploads';
+
+// Check if the directory exists
+if (!is_dir($uploadsDir)) {
+	// Create the directory with permissions 0755 and recursive flag true
+	if (!mkdir($uploadsDir, 0755, true)) {
+		die('Failed to create folders...');
+	}
+}
 // Set up settings
 $settings = require __DIR__ . '/../app/settings.php';
 $settings($containerBuilder);

@@ -9,9 +9,12 @@ use Slim\Routing\RouteContext;
 use App\Application\Models\Item;
 use App\Application\Models\ItemModel;
 use App\Application\Models\UserModel;
+use App\Application\Models\ImageModel;
 use Respect\Validation\Validator as v;
 use Illuminate\Database\Schema\Blueprint;
+use App\Application\Services\ImageService;
 use App\Application\Controllers\Controller;
+use App\Application\Services\ImageServices;
 use App\Application\Handlers\MyResponseHandler;
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -129,12 +132,31 @@ class ItemController extends Controller
         $idFilter              = $queryParams['id'] ?? null;
         $createdDateFromFilter = $queryParams['dateFrom'] ?? (date('Y') - 100) . date('-m-d');
         $createdDateToFilter   = $queryParams['dateTo'] ?? date('Y-m-d');
+        $status                = $queryParams['status'] ?? 1;
 
         $pageSize   = $queryParams['pageSize'] ?? 1000; // Default page size
         $pageNumber = $queryParams['pageNumber'] ?? 1; // Default page number
 
-        $items = $itemModel->getItems($idFilter, $nameFilter, $createdDateFromFilter, $createdDateToFilter, $pageSize, $pageNumber);
+        $items      = $itemModel->getItems($idFilter, $nameFilter, $createdDateFromFilter, $createdDateToFilter, $pageSize, $pageNumber);
+        $table_name = 'items';
 
+        $sql = "SELECT $table_name.*,
+                    (GROUP_CONCAT(img.filename)) filename,
+                    (GROUP_CONCAT(img.original_filename)) original_filename
+				FROM `$table_name`
+                left join (SELECT filename,table_id,table_name,original_filename FROM image ) img 
+                on img.table_id =$table_name.id
+                and img.table_name='$table_name'
+            
+                where DATE(`$table_name`.created_at) BETWEEN '$createdDateFromFilter' AND '$createdDateToFilter'";
+
+        $sql .= "GROUP BY $table_name.id";
+
+        // var_dump($sql);
+        // exit;
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute();
+        $items         = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $responseArray = [
             'pageSize' => $pageSize,
             'pageNumber' => $pageNumber,
@@ -151,9 +173,16 @@ class ItemController extends Controller
 
         $data = $request->getParsedBody();
 
+        $amount = $data["amount"] ?? 1;
         self::validateData($data);
 
-        $itemModel->postItems($data);
+        for ($i = 0; $i < $amount; $i++) {
+            if ($itemModel->postItems($data) === false) {
+                $responseData['data']['error'] = $itemModel->getLastException();
+                return MyResponseHandler::handleResponse($response, $responseData, 400);
+            }
+        }
+
 
         $insertedItemId = $pdo->lastInsertId();
 
@@ -162,6 +191,80 @@ class ItemController extends Controller
         $responseData['data']['message'] = 'Item created';
         $responseData['data']['id']      = $insertedItemId;
         $responseData['data']['data']    = $lastInsertedData;
+
+        return MyResponseHandler::handleResponse($response, $responseData, 201);
+
+    }
+    public function postItemWithImage(Request $request, Response $response): Response
+    {
+
+        $jwt_token = $request->getAttribute('jwt_token');
+        $pdo       = $this->container->get(PDO::class);
+
+        $itemModel    = new ItemModel($pdo);
+        $imageModel   = new ImageModel($pdo);
+        $imageService = new ImageService();
+
+        $data = $request->getParsedBody();
+
+        $uploadedFiles = $request->getUploadedFiles();
+
+        $tableName = "items";
+
+        try {
+            $pdo->beginTransaction();
+            for ($i = 0; $i < $data["amount"]; $i++) {
+
+                if ($itemModel->postItems($data) === false) {
+
+                    $responseData['data']['error'] = $itemModel->getLastException();
+                    return MyResponseHandler::handleResponse($response, $responseData, 400);
+                } else {
+
+                    $insertedItemId = $pdo->lastInsertId();
+
+                    if (!empty($uploadedFiles)) {
+
+                        $uploadPath = __DIR__ . '/../../../public/uploads/';
+
+                        foreach ($uploadedFiles['image'] as $uploadedFile) {
+                            $result = $imageService->checkAndProcessImage($uploadedFile, $uploadPath);
+                            if ($result === false) {
+                                continue;
+                            }
+                            $imageData = [
+                                "created_by" => $jwt_token->username,
+                                "original_filename" => $result['original_path'],
+                                "filename" => $result['thumbnail_path'],
+                                "table_name" => $tableName,
+                                "table_id" => $insertedItemId
+                            ];
+
+                            if ($imageModel->insert($imageData)->execute() === false) {
+
+                                $responseData['data']['error'] = $imageModel->getLastException();
+                                return MyResponseHandler::handleResponse($response, $responseData, 400);
+                            }
+                        }
+
+                        $responseData['data']['message'] = 'Image Upload ';
+                    } else {
+                        $responseData['data']['message'] = 'No Image Upload';
+                    }
+                }
+            }
+            $pdo->commit();
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            $responseData['data']['error'] = $e->getMessage();
+            return MyResponseHandler::handleResponse($response, $responseData, 400);
+        }
+
+
+        $responseData['data']['message'] .= 'Item created ';
+        $responseData['data']['id']             = $insertedItemId;
+        $responseData['data']['original_path']  = $dataExport['original_filename'] ?? null;
+        $responseData['data']['thumbnail_path'] = $dataExport['filename'] ?? null;
 
         return MyResponseHandler::handleResponse($response, $responseData, 201);
 
@@ -242,112 +345,4 @@ class ItemController extends Controller
         }
     }
 
-    public function getAll(Request $request, Response $response)
-    {
-        $capsule = $this->container->get(Eloquent::class);
-        $items   = Item::all();
-
-        $responseData['data']['data'] = $items;
-        return MyResponseHandler::handleResponse($response, $responseData, 200);
-
-    }
-    public function insertItem(Request $request, Response $response)
-    {
-        $capsule = $this->container->get(Eloquent::class);
-        $data    = $request->getParsedBody();
-
-        if (!Capsule::schema()->hasTable('items')) {
-            // If the table does not exist, create it
-            Capsule::schema()->create('items', function (Blueprint $table) {
-                $table->id(); // Add primary key column
-                $table->string('name');
-                $table->text('description');
-                $table->integer('numberValue');
-                $table->boolean('booleanValue');
-                $table->json('arrayValue');
-                $table->json('objectValue');
-                $table->timestamps(); // Add created_at and updated_at columns
-            });
-        }
-        self::validateData($data);
-
-        $items = Item::create([
-            'name' => $data['name'],
-            'description' => $data['description'],
-            'numberValue' => $data['numberValue'],
-            'booleanValue' => $data['booleanValue'],
-            'arrayValue' => json_encode($data['arrayValue']),
-            'objectValue' => json_encode($data['objectValue']),
-        ]);
-
-        $responseData['data']['data'] = $items;
-        $response                     = MyResponseHandler::handleResponse($response, $responseData, 200);
-
-        return $response;
-    }
-    public function changeItem(Request $request, Response $response, $args)
-    {
-        $capsule = $this->container->get(Eloquent::class);
-        $itemId  = $args['id'];
-        $data    = $request->getParsedBody();
-
-        $item = Item::find($itemId);
-
-        if (!$item) {
-            $responseData['data']['data'] = 'Data not Found';
-            $response                     = MyResponseHandler::handleResponse($response, $responseData, 200);
-            return $response;
-        }
-
-        $item->update($data);
-
-        $responseData['data']['data']    = $item;
-        $responseData['data']['message'] = "Update succesfully";
-        $response                        = MyResponseHandler::handleResponse($response, $responseData, 200);
-
-        return $response;
-    }
-    public function eraseItem(Request $request, Response $response, $args): Response
-    {
-        $capsule = $this->container->get(Eloquent::class);
-        $itemId  = $args['id'];
-        $item    = Item::find($itemId);
-
-        if (!$item) {
-            $responseData['data']['data'] = 'Data not Found';
-            $response                     = MyResponseHandler::handleResponse($response, $responseData, 200);
-            return $response;
-        }
-
-        // Delete the item
-        $item->delete();
-
-        $responseData['data']['message'] = "Item delete Successfully";
-        $response                        = MyResponseHandler::handleResponse($response, $responseData, 200);
-
-        return $response;
-    }
-    public function testMyMethod(Request $request, Response $response, $args): Response
-    {
-        $pdo       = $this->container->get(PDO::class);
-        $itemModel = new ItemModel($pdo);
-
-        $queryParams = $request->getQueryParams();
-
-        $nameFilter = $queryParams['name'] ?? null;
-        $idFilter   = $queryParams['id'] ?? null;
-        $pageSize   = $queryParams['pageSize'] ?? 1000; // Default page size
-        $pageNumber = $queryParams['pageNumber'] ?? 1; // Default page number
-
-        $sql  = $itemModel->findAll();
-        $item = $sql->where("numberValue", "=", "84")->execute();
-
-        // $item = $itemModel->find(100)->execute();
-        // var_dump($item);
-        // exit;
-        $responseData['data']['message'] = $item;
-        return MyResponseHandler::handleResponse($response, $responseData, 200);
-
-
-    }
 }

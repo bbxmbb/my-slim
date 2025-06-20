@@ -4,15 +4,19 @@ namespace App\Application\Models;
 
 use PDO;
 use PDOException;
+use App\Application\Models\ImageModel;
 use App\Application\Handlers\MyResponseHandler;
 use Psr\Http\Message\ResponseInterface as Response;
 
 class ItemModel extends Model
 {
+    protected $imageModel;
     public function __construct(PDO $pdo)
     {
         parent::__construct($pdo);
         $this->tableName = "items";
+
+        $this->imageModel = new ImageModel($pdo);
     }
 
     public function createTableIfNotExist()
@@ -149,7 +153,6 @@ class ItemModel extends Model
             throw $e;
         }
     }
-
     protected static function checkType(array $items): array
     {
         // Create a response array with different data types

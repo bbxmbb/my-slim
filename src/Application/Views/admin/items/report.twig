@@ -78,7 +78,7 @@
                             <div class="row">
                                 <div class="col d-flex justify-content-end">
                                     <button class="btn btn-primary" data-bs-toggle='modal'
-                                        data-bs-target='#formEditModal'>เพิ่มสินค้า</button>
+                                        data-bs-target='#formEditModal' id="addNewItemBtn">เพิ่มสินค้า</button>
                                 </div>
                             </div>
                             <table id="example1"
@@ -89,6 +89,7 @@
                                         <th>Name</th>
                                         <th>Description</th>
                                         <th>Number</th>
+                                        <th>รูปภาพ</th>
                                         <th>วันที่สร้าง</th>
                                         <th style='width:50px'>แก้ไข</th>
                                         <th style='width:50px'>ลบ</th>
@@ -130,7 +131,17 @@
                     <textarea class="form-control" name="description" id="description" cols="30" rows="5"></textarea>
                     <label for="description">ราคา</label>
                     <input class="form-control" type="number" name="numberValue" id="numberValue">
+                    <label for="amount" id="labelAmount" class="form-label">จำนวน</label>
+                    <input class="form-control" type="number" id="amount" name="amount" inputmode="numeric" value="1"
+                        onfocusout="(this.value<1 ? this.value=1 :
+                                    this.value>10 ? this.value=10 : this.value=this.value)">
 
+                    <label for="image" class="form-label">รูปภาพ</label>
+                    <input class="form-control" type="file" id="image" name="image" multiple>
+                    <div id="progressBars"></div>
+                    <div class="image_container text-center">
+                        <div class="gallery"></div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -158,7 +169,9 @@
 </script>
 <script src="{{assetUrl('/vendor/almasaeed2010/adminlte/plugins/jszip/jszip.min.js')}}"></script>
 <script src="{{assetUrl('/vendor/almasaeed2010/adminlte/plugins/pdfmake/pdfmake.min.js')}}"></script>
-<script src="{{assetUrl('/vendor/almasaeed2010/adminlte/plugins/pdfmake/vfs_fonts.js')}}"></script>
+{# <script src="{{assetUrl('/vendor/almasaeed2010/adminlte/plugins/pdfmake/vfs_fonts.js')}}"></script> #}
+<script src="{{assetUrl('/public/js/vfs_fonts.js')}}"></script>
+
 <script src="{{assetUrl('/vendor/almasaeed2010/adminlte/plugins/datatables-buttons/js/buttons.html5.min.js')}}">
 </script>
 <script src="{{assetUrl('/vendor/almasaeed2010/adminlte/plugins/datatables-buttons/js/buttons.print.min.js')}}">
@@ -171,6 +184,7 @@
 <script>
     var table;
     $(function () {
+
         var currentDate = new Date();
         currentDate.setDate(1);
         var formattedDate = currentDate.toISOString().split('T')[0];
@@ -178,6 +192,15 @@
         document.getElementById("dateTo").valueAsDate = new Date();
         //table = loadDataTable('#example1', '{{base_url}}' +'/items');
         $("#findBtn").on('click', function () {
+            pdfMake.fonts = {
+                THSarabun: {
+                    normal: 'THSarabun.ttf',
+                    bold: 'THSarabun.ttf',
+                    italics: 'THSarabun.ttf',
+                    bolditalics: 'THSarabun.ttf'
+
+                }
+            };
             var dateFrom = $("#dateFrom").val();
             var dateTo = $("#dateTo").val();
             url = '{{base_url}}' + '/items?dateFrom=' + dateFrom + '&dateTo=' + dateTo;
@@ -245,62 +268,19 @@
             });
         })
         $("#confirmBtn").on('click', function () {
-            var formData = {
-                name: $('#name').val(),
-                description: $('#description').val(),
-                numberValue: $('#numberValue').val()
-            };
-            var jsonData = JSON.stringify(formData);
-
-            var id = $("#rowId").val();
-            var type, url;
-            if (id == '') {
-                type = 'POST';
-                url = '{{base_url}}' + '/items';
-            } else {
-                type = 'PUT';
-                url = '{{base_url}}' + '/items/' + id;
-
-            }
-            $.ajax({
-                type: type,
-                url: url,
-                contentType: 'application/json',
-                data: jsonData,
-                success: function (response) {
-                    console.log("response", response);
-                    Swal.fire({
-                        title: "บันทึกสำเร็จ",
-                        text: response.data.message + " id:" +
-                            response
-                            .data.id,
-                        showCloseButton: true,
-                        showConfirmButton: false,
-                        icon: "success",
-                        timer: 1500
-                    });
-                    $("#mainForm").trigger("reset");
-                    $("#findBtn").click();
-                    $('#formEditModal').modal('hide');
-                },
-                error: function (error) {
-                    errorJSON = JSON.parse(error.responseText);
-                    console.error("error", errorJSON);
-                    Swal.fire({
-                        title: "ไม่สำเร็จ",
-                        text: errorJSON.error.description,
-                        showCloseButton: true,
-                        showConfirmButton: false,
-                        icon: "error"
-                    });
-                    $('#formEditModal').modal('hide');
-                }
-            });
-
+            formSubmitWithImage();
         });
         $('#formEditModal').on('hidden.bs.modal', function () {
             $("#updateForm").trigger("reset");
             $("#updateFormTitle").html("เพิ่มสินค้าใหม่");
+        });
+        $("#addNewItemBtn").on('click', function () {
+            formReset();
+        })
+        $('#image').on('change', function () {
+            var allowedExts = ['jpg', 'jpeg', 'png', 'gif'];
+            checkFileExtensions('image', allowedExts, 3);
+            imagesPreview(this, 'div.gallery');
         });
     });
 
@@ -308,6 +288,24 @@
         $(tableId).DataTable().destroy();
         return new DataTable(tableId, {
             ajax: url,
+            "responsive": false,
+            "lengthChange": true,
+            "autoWidth": true,
+            deferRender: true,
+            stateSave: true,
+            fixedColumns: true,
+            scrollCollapse: true,
+            scrollX: true,
+            deferRender: false,
+            "lengthMenu": [10, 25, 50],
+            stateSaveParams: function (settings, data) {
+                // Exclude search value from saved state
+                data.search.search = '';
+            },
+            stateLoadParams: function (settings, data) {
+                // Exclude search value from loaded state
+                data.search.search = '';
+            },
             columns: [{
                     data: 'id'
                 }, {
@@ -318,6 +316,24 @@
                 },
                 {
                     data: 'numberValue'
+                },
+                {
+                    data: 'filename',
+                    "render": function (data, type, row, meta) {
+                        var html = '';
+                        if (data != null) {
+                            image = data.toString().split(",");
+                            imageOriginal = row.original_filename.toString().split(",");
+                            image.forEach((item, idx) => {
+                                html += "<a href=" + '{{base_url}}' +
+                                    "/public/uploads/" + imageOriginal[idx] +
+                                    " target='_blank'><img style='max-width:100px;max-height:100px' src=" +
+                                    '{{base_url}}' +
+                                    "/public/uploads/" + item + "></a>"
+                            })
+                        }
+                        return html;
+                    }
                 },
                 {
                     data: 'created_at',
@@ -348,11 +364,6 @@
                 }
 
             ],
-            "responsive": true,
-            "lengthChange": true,
-            "autoWidth": false,
-            deferRender: true,
-            stateSave: true,
             dom: "<'row'<'col-12 text-center'B>>" +
                 "<'row'<'col-6 d-flex justify-content-start'l><'col-6 d-flex justify-content-end'f>> " +
                 "<'row'<'col-sm-12 col-md-12'tr>>" +
@@ -366,12 +377,323 @@
             ],
             "sScrollX": "100%",
             "sScrollXInner": "110%",
-            "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"],
+            "buttons": ["copy", "csv", "excel", "print", {
+                extend: 'pdf',
+                exportOptions: {
+                    columns: function (idx, data, node) {
+                        if (idx >= 0) {
+                            return data;
+                        }
+                    }
+                },
+                orientation: 'portrait',
+                customize: function (doc) {
+                    doc.defaultStyle.fontSize = 14;
+                    doc.defaultStyle.font = 'THSarabun';
+                }
+            }],
 
             "lengthMenu": [10, 25, 50]
         });
 
 
+    }
+
+    function checkFileExtensions(elementId, allowedExts, limitFile) {
+        var files = $("#" + elementId)[0].files;
+
+        if ($("#" + elementId)[0].files.length > limitFile) {
+            Swal.fire('Only ' + limitFile + ' Image is available:');
+            // Clear the file input
+            $("#" + elementId).val('');
+            return false;
+        }
+        for (var i = 0; i < files.length; i++) {
+            var fileName = files[i].name;
+            var ext = fileName.split('.').pop().toLowerCase();
+
+            if ($.inArray(ext, allowedExts) == -1) {
+                Swal.fire('Invalid file extension for file: ' + fileName +
+                    '. Please upload a file with extensions: ' +
+                    allowedExts.join(', '));
+                // Clear the file input
+                $("#" + elementId).val('');
+                return false; // Stop further processing
+            }
+        }
+
+        return true; // All files have valid extensions
+    }
+
+    function imagesPreview(input, placeToInsertImagePreview) {
+
+        if (input.files) {
+            $(placeToInsertImagePreview).empty();
+            var files = input.files; // Store the files initially
+            var filesAmount = files.length;
+            var newRow;
+            for (i = 0; i < filesAmount; i++) {
+                var reader = new FileReader();
+
+                reader.onload = function (event) {
+                    // Create a new Bootstrap column
+                    var newColumn = $('<div class="col-6"></div>');
+
+                    // Create an img element and set its attributes
+                    var newImage = $(
+                            '<img class="img-fluid" style="width:150px;height:150px;object-fit:contain">'
+                        )
+                        .attr('src', event.target.result);
+
+                    // Append the image to the column
+                    newColumn.append(newImage);
+
+
+                    // If newRow is not defined, create a new row and append it to the container
+                    if (!newRow) {
+                        newRow = $('<div class="row"></div>');
+                        $(placeToInsertImagePreview).append(newRow);
+                    }
+
+                    // Append the column to the current row
+                    newRow.append(newColumn);
+
+                    // If this is the third column, reset newRow to null to start a new row
+                    if (newRow.children('.col-6').length === 2) {
+                        newRow = null;
+                    }
+
+                }
+                reader.readAsDataURL(files[i]);
+            }
+        }
+
+    };
+
+    function formSubmit() {
+        var formData = {
+            name: $('#name').val(),
+            description: $('#description').val(),
+            numberValue: $('#numberValue').val(),
+            amount: $("#amount").val() || 1,
+        };
+        var jsonData = JSON.stringify(formData);
+
+        var id = $("#rowId").val();
+        var type, url;
+
+        if (id == '') {
+            type = 'POST';
+            url = '{{base_url}}' + '/items';
+        } else {
+            type = 'PUT';
+            url = '{{base_url}}' + '/items/' + id;
+
+        }
+        $.ajax({
+            type: type,
+            url: url,
+            contentType: 'application/json',
+            data: jsonData,
+            success: function (response) {
+                var files = $('#image')[0].files;
+
+                if (files.length > 0) {
+                    // Convert the files array to FormData
+                    imageUpload(files, 'items', response.data.id, '#progressBars');
+                } else {
+                    console.log("response", response);
+                    Swal.fire({
+                        title: "บันทึกสำเร็จ",
+                        text: response.data.message +
+                            " id:" +
+                            response
+                            .data.id,
+                        showCloseButton: true,
+                        showConfirmButton: false,
+                        icon: "success",
+                        timer: 1500,
+                    }).then((result) => {
+                        window.location.href = '{{base_url}}' + "/admin/items/report";
+                    });
+                }
+                $("#mainForm").trigger("reset");
+                $("#findBtn").click();
+                $('#formEditModal').modal('hide');
+            },
+            error: function (error) {
+                errorJSON = JSON.parse(error.responseText);
+                console.error("error", errorJSON);
+                Swal.fire({
+                    title: "ไม่สำเร็จ",
+                    text: errorJSON.error.description,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    icon: "error"
+                });
+                $('#formEditModal').modal('hide');
+            }
+        });
+    }
+
+    function imageUpload(files, tableName, tableId, progressBarId) {
+        var amountUpload = $("#amount").val() || 1;
+        var fileData = new FormData();
+        for (var i = 0; i < files.length; i++) {
+            fileData.append('image[]', files[i]);
+        }
+        var progressBar = $('<div class="progress"><div class="progress-bar"></div></div>').appendTo(progressBarId);
+
+        overlayStart();
+        $.ajax({
+            type: "POST",
+            url: '{{base_url}}' + '/image?tableName=' + tableName + '&tableId=' + tableId + '&amountUpload=' +
+                amountUpload,
+            data: fileData,
+            processData: false,
+            contentType: false,
+            timeout: 800000,
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function (e) {
+                    if (e.lengthComputable) {
+                        var percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.find('.progress-bar').css('width', percent + '%').html(percent +
+                            '%');
+                    }
+                });
+                return xhr;
+            },
+            success: function (response) {
+
+                overlayStop();
+                console.log("response", response);
+                Swal.fire({
+                    title: "บันทึกสำเร็จ",
+                    text: response.data.message +
+                        " id: " + tableId,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    icon: "success",
+                    timer: 1500
+                });
+                formReset();
+                progressBar.remove();
+                $("#findBtn").click();
+            },
+            error: function (error) {
+
+                overlayStop();
+                errorJSON = JSON.parse(error.responseText);
+                console.error("error", errorJSON);
+                Swal.fire({
+                    title: "ไม่สำเร็จ",
+                    text: errorJSON.error
+                        .description,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    icon: "error"
+                });
+                console.log("5");
+                progressBar.remove();
+
+                $('#formEditModal').modal('hide');
+            }
+        });
+    }
+
+    function formSubmitWithImage() {
+        var formData = new FormData();
+
+        formData.append('name', $('#name').val());
+        formData.append('description', $('#description').val());
+        formData.append('numberValue', $('#numberValue').val());
+        formData.append('amount', $("#amount").val() || 1);
+
+        var id = $("#rowId").val();
+        var type, url;
+
+        if (id == '') {
+            type = 'POST';
+            url = '{{base_url}}' + '/items';
+        } else {
+            type = 'PUT';
+            url = '{{base_url}}' + '/items/' + id;
+
+        }
+        var files = $('#image')[0].files;
+
+        var amountUpload = $("#amount").val() || 1;
+        for (var i = 0; i < files.length; i++) {
+            formData.append('image[]', files[i]);
+        }
+        var progressBar = $('<div class="progress"><div class="progress-bar"></div></div>').appendTo('#progressBarId');
+
+        overlayStart();
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: formData,
+            processData: false,
+            contentType: false,
+            timeout: 800000,
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function (e) {
+                    if (e.lengthComputable) {
+                        var percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.find('.progress-bar').css('width', percent + '%').html(percent +
+                            '%');
+                    }
+                });
+                return xhr;
+            },
+            success: function (response) {
+
+                overlayStop();
+                console.log("response", response);
+                Swal.fire({
+                    title: "บันทึกสำเร็จ",
+                    text: response.data.message +
+                        "   id: " + response.data.id,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    icon: "success",
+                    timer: 1500
+                });
+                formReset();
+                progressBar.remove();
+                $("#findBtn").click();
+                $('#formEditModal').modal('hide');
+            },
+            error: function (error) {
+
+                overlayStop();
+                errorJSON = JSON.parse(error.responseText);
+                console.error("error", errorJSON);
+                Swal.fire({
+                    title: "ไม่สำเร็จ",
+                    text: errorJSON.error
+                        .description,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    icon: "error"
+                });
+                progressBar.remove();
+
+                $('#formEditModal').modal('hide');
+            }
+        });
+    }
+
+    function formReset() {
+        $(':input', '#formEditModal')
+            .not(':button, :submit, :reset, :hidden')
+            .val('')
+            .prop('checked', false)
+            .prop('selected', false);
+
+        $(".gallery").empty()
     }
 </script>
 {% endblock %}

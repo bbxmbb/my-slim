@@ -9,6 +9,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use App\Application\Controllers\AuthController;
 use App\Application\Controllers\HomeController;
 use App\Application\Controllers\ItemController;
+use App\Application\Controllers\ImageController;
 use App\Application\Handlers\MyResponseHandler;
 use App\Application\Settings\SettingsInterface;
 use App\Application\Actions\User\ViewUserAction;
@@ -82,7 +83,7 @@ return function (App $app) {
         $logger->info($request->getUri()->getPath() . ' ' . $_SERVER['REMOTE_ADDR']);
 
 
-        $response->getBody()->write('logdata');
+        $response->getBody()->write("logdata");
         return $response
             // ->withHeader('Content-Type', 'application/json')
             ->withStatus(200);
@@ -91,13 +92,16 @@ return function (App $app) {
     $app->group('/items', function (Group $group) {
         $group->get('', ItemController::class . ':getItem');
         $group->get('/all', ItemController::class . ':getAll');
-        $group->post('', ItemController::class . ':postItem');
+        // $group->post('', ItemController::class . ':postItem');
+        $group->post('', ItemController::class . ':postItemWithImage');
         $group->post('/create', ItemController::class . ':insertItem');
         $group->put('/{id}', ItemController::class . ':putItem');
         $group->put('/update/{id}', ItemController::class . ':changeItem');
         $group->delete('/{id}', ItemController::class . ':deleteItem');
         $group->delete('/delete/{id}', ItemController::class . ':eraseItem');
         $group->get('/test', ItemController::class . ':testMyMethod');
+
+        $group->post('/imageUpload/{id}', ItemController::class . ':imageUpload');
     })->add(CookieMiddleware::class);
 
     $app->group('', function (Group $group) {

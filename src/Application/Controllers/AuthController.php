@@ -11,6 +11,7 @@ use Slim\Psr7\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use App\Application\Models\ItemModel;
 use App\Application\Models\UserModel;
+use App\Application\Models\ImageModel;
 use Psr\Container\ContainerInterface;
 use Respect\Validation\Validator as v;
 use App\Application\Helpers\EmailSender;
@@ -33,12 +34,14 @@ class AuthController extends Controller
         $settingsModel = new SettingsModel($pdo);
         $userModel     = new UserModel($pdo);
         $itemModel     = new ItemModel($pdo);
+        $imageModel    = new ImageModel($pdo);
 
         // Check if the users,item and settings table exists
         if (
             $itemModel->createTableIfNotExist() === false ||
             $userModel->createTableIfNotExist() === false ||
-            $settingsModel->createTableIfNotExist($timezone) === false
+            $settingsModel->createTableIfNotExist($timezone) === false ||
+            $imageModel->createTableIfNotExist() === false
         ) {
             $responseData["data"]["message"] = $settingsModel->getLastException();
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);

@@ -10,6 +10,8 @@ class Model
     protected PDO $pdo;
     protected string $tableName = '';
     protected string $whereClause = '';
+    protected string $groupByClause = '';
+    protected string $limitClause = '';
     protected array $params = [];
     protected string $joinClause = '';
     protected string $sql = "";
@@ -123,6 +125,20 @@ class Model
     public function rightJoin(string $table, string $condition)
     {
         $this->joinClause = " RIGHT JOIN $table ON $condition";
+        return $this;
+    }
+    public function groupBy(string $column)
+    {
+        $this->groupByClause = " GROUP BY $column";
+        return $this;
+    }
+
+    public function limit(int $limit, ?int $offset = null)
+    {
+        $this->limitClause = " LIMIT $limit";
+        if ($offset !== null) {
+            $this->limitClause .= " OFFSET $offset";
+        }
         return $this;
     }
     public function execute(string $fetch = 'fetchAll')
