@@ -58,7 +58,7 @@ class AuthController extends Controller
         $cookieParams = $request->getCookieParams();
 
         if (isset($cookieParams['jwt_token']) || isset($_SESSION['jwt_token'])) {
-            return $response->withHeader('Location', $_ENV['MYPATH'] . '/admin/items/report')->withStatus(302);
+            return $response->withHeader('Location', value: $_ENV['MYPATH'] . '/admin/items/report')->withStatus(302);
         }
         $queryParams = $request->getQueryParams();
 
@@ -422,7 +422,6 @@ class AuthController extends Controller
 
         $decoded = $client->verifyIdToken($body['credential']);
 
-
         //gen token
         $token = JwtTokenGenerator::generateJwtToken($decoded['sub'], $decoded['email']);
 
@@ -435,7 +434,9 @@ class AuthController extends Controller
         if (!$user) { //กรณี login โดยไม่เคยสมัคร
             if ($settings['register_with_google'] == false) {
                 $responseData['data']['message'] = 'Register unavailable';
-                return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 409);
+                $response                        = MyResponseHandler::handleResponse($response, $responseData, 409);
+                return $response;
+                // return $this->responseOnGoogleLogin($response, $body, $responseData, 409);
             }
 
             //กรณีเป็นการสมัครครั้งแรกเลย
@@ -480,10 +481,9 @@ class AuthController extends Controller
 
         }
 
-
-        $responseData['data']['message'] = 'Login Successfully';
-        $responseData['data']['jwt']     = $token;
-
+        $responseData['data']['select_by'] = $body['select_by'];
+        $responseData['data']['message']   = 'Login Successfully';
+        $responseData['data']['jwt']       = $token;
         return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 200, $redirect_url, 'admin', $token);
 
     }
@@ -491,7 +491,9 @@ class AuthController extends Controller
     {
 
         if ($select_by == "fedcm") { //come from one tap
-            $response = MyResponseHandler::handleResponse($response, $responseData, $statusCode);
+
+            $response = $this->setLoginCookie($response, $token);
+            $response = MyResponseHandler::handleResponse($response, $responseData, 302);
 
         } else if ($select_by == "btn") { //click btn
 
@@ -511,15 +513,19 @@ class AuthController extends Controller
             }
 
             //status Code must always be 302 when redirect!
-            $response = $response->withStatus(302)->withHeader('Location', $_ENV["MYPATH"] . $url);
+            //$response = $this->setLoginCookie($response, $token);
+            // $response = MyResponseHandler::handleResponse($response, $responseData, 302);
+
+            //force redirect to items/report page
+            return $response->withHeader('Location', $_ENV["MYPATH"] . '/admin/items/report')->withStatus(302);
+
+
         } else { //selected_by mismatch and return the error on message
             $responseData['data']['message'] = "selected_by mismatch ";
             $statusCode                      = 400;
             $response                        = MyResponseHandler::handleResponse($response, $responseData, $statusCode);
-            return $response;
-        }
 
-        $response = $this->setLoginCookie($response, $token);
+        }
         return $response;
 
     }

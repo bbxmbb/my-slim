@@ -207,13 +207,15 @@ Signin
         const urlParams = new URLSearchParams(queryString);
         redirect_url = urlParams.get('redirect_url');
         if ('{{loginWithGoogle}}' == true) {
+
+            //google login Button
             google.accounts.id.initialize({
 
                 client_id: '{{client_id}}',
                 callback: handleCredentialResponse,
                 cancel_on_tap_outside: false,
                 ux_mode: "redirect",
-                login_uri: '{{base_url}}' + '/loginWithGoogle?redirect_url=' + redirect_url
+                login_uri: '{{base_url}}' + '/loginWithGoogle'
             });
             google.accounts.id.renderButton(
                 document.getElementById("googleLoginBtn"), {
@@ -224,7 +226,9 @@ Signin
                     'width': 300,
                 } // customization attributes
             );
-            google.accounts.id.prompt(); // also display the One Tap dialog
+
+            // also display the One Tap dialog
+            google.accounts.id.prompt();
 
         }
 

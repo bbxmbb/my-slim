@@ -16,6 +16,9 @@ require_once __DIR__ . '/../src/Application/Helpers/functions.php';
 session_start();
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
+foreach ($_ENV as $key => $value) {
+	unset($_SERVER[$key]); // Optional cleanup
+}
 // Instantiate PHP-DI ContainerBuilder
 $containerBuilder = new ContainerBuilder();
 
