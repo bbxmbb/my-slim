@@ -197,9 +197,9 @@ Signin
 {# <script src="/public/js/googleClient.js" async defer></script> #}
 
 
-<script src="https://apis.google.com/js/platform.js?onload=renderButton" async defer></script>
+{# <script src="https://apis.google.com/js/platform.js?onload=renderButton" async defer></script> #}
 
-<script src="https://apis.google.com/js/platform.js" async defer></script>
+{# <script src="https://apis.google.com/js/platform.js" async defer></script> #}
 <script>
     var global, redirect_url;
     window.onload = function () {
@@ -288,8 +288,8 @@ Signin
                 overlayStop();
                 global = xhr;
                 var responseJSON = JSON.parse(xhr.responseText);
-                // console.log(responseJSON.data);
-                console.log(xhr.status.toString().charAt(0));
+                console.log(responseJSON.data);
+                //console.log(xhr.status.toString().charAt(0));
                 if (xhr.status.toString() == '201') { //in case register by email and then by google
                     $('#errorContainer').hide();
                     $('#successContainer').html(responseJSON.data.message).show();

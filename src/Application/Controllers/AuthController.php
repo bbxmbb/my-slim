@@ -422,6 +422,10 @@ class AuthController extends Controller
 
         $decoded = $client->verifyIdToken($body['credential']);
 
+
+        //gen token
+        $token = JwtTokenGenerator::generateJwtToken($decoded['sub'], $decoded['email']);
+
         $user = $userModel
             ->findAll()
             ->where("email", '=', $decoded['email'])
@@ -458,10 +462,9 @@ class AuthController extends Controller
             $responseData['data']['jwt']     = $body['credential'];
             $responseData['data']['message'] = 'Register successfully! <br>Please reload the page again';
 
-            $token    = JwtTokenGenerator::generateJwtToken($decoded['sub'], $decoded['email']);
             $response = $this->setLoginCookie($response, $token);
 
-            return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 201, 'admin');
+            return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 201, 'admin', $token);
 
         } else if ($user['email'] = $decoded['email'] && empty($user['google_sub_id'])) {  //กรณี เคยสมัครด้วย email ไว้แล้ว แต่login ด้วย google
 
@@ -473,27 +476,25 @@ class AuthController extends Controller
             }
 
             $responseData['data']['message'] = 'Register ' . $decoded['email'] . ' with Google Acccount Successfully ';
-            return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 201, $redirect_url);
+            return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 201, $redirect_url, $token);
 
         }
 
-        //กรณี มี email และ sub_id ที่ถูกต้อง ก็ gen token เลย
-        $token    = JwtTokenGenerator::generateJwtToken($decoded['sub'], $decoded['email']);
-        $response = $this->setLoginCookie($response, $token);
 
         $responseData['data']['message'] = 'Login Successfully';
         $responseData['data']['jwt']     = $token;
 
-        return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 200, $redirect_url, 'admin', );
+        return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 200, $redirect_url, 'admin', $token);
 
     }
-    private function responseOnGoogleLogin($response, $select_by, $responseData, $statusCode, $redirect_url, $path = 'login')
+    private function responseOnGoogleLogin($response, $select_by, $responseData, $statusCode, $redirect_url = '', $path = 'login', $token = '')
     {
-        if ($select_by == "user") { //come from one tap
 
+        if ($select_by == "fedcm") { //come from one tap
             $response = MyResponseHandler::handleResponse($response, $responseData, $statusCode);
 
         } else if ($select_by == "btn") { //click btn
+
             if ($path == 'login') {
                 $firstStatusCode = substr($statusCode, 0, 1);
                 ($firstStatusCode == '2' || $firstStatusCode == '3') ? $status = 'true' : $status = 'false';
@@ -511,8 +512,14 @@ class AuthController extends Controller
 
             //status Code must always be 302 when redirect!
             $response = $response->withStatus(302)->withHeader('Location', $_ENV["MYPATH"] . $url);
+        } else { //selected_by mismatch and return the error on message
+            $responseData['data']['message'] = "selected_by mismatch ";
+            $statusCode                      = 400;
+            $response                        = MyResponseHandler::handleResponse($response, $responseData, $statusCode);
+            return $response;
         }
 
+        $response = $this->setLoginCookie($response, $token);
         return $response;
 
     }
