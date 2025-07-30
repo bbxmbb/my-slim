@@ -79,15 +79,25 @@ return function (App $app) {
     $app->get('/logger', function (Request $request, Response $response) {
 
         $logger = $this->get(LoggerInterface::class);
-        var_dump($logger);
         $logger->info($request->getUri()->getPath() . ' ' . $_SERVER['REMOTE_ADDR']);
 
+        // Path to log file (adjust if different)
+        $logFile = __DIR__ . '/../logs/app.log';
 
-        $response->getBody()->write("logdata");
-        return $response
-            // ->withHeader('Content-Type', 'application/json')
-            ->withStatus(200);
-    });
+        if (!file_exists($logFile)) {
+            $response->getBody()->write("Log file not found.");
+            return $response->withStatus(404);
+        }
+
+        // Read last 100 lines from log
+        $lines     = readLastLines($logFile, 100);
+        $logOutput = implode("\n", $lines);
+
+        $response->getBody()->write("<pre>" . htmlspecialchars($logOutput) . "</pre>");
+
+        return $response->withHeader('Content-Type', 'text/html')->withStatus(200);
+
+    })->add(CookieMiddleware::class);
 
     $app->group('/items', function (Group $group) {
         $group->get('', ItemController::class . ':getItem');

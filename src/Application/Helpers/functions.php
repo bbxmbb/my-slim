@@ -171,3 +171,19 @@ function responseFunc(Response $response, $responseDataArray, $statusCode = 200)
     $response = $response->withHeader('Content-Type', 'application/json')->withStatus($statusCode);
     return $response;
 }
+function readLastLines($filePath, $numLines = 1000)
+{
+    $lines = [];
+    $file  = new \SplFileObject($filePath, 'r');
+    $file->seek(PHP_INT_MAX);
+    $lastLine = $file->key();
+
+    for ($i = $lastLine; $i >= 0 && count($lines) < $numLines; $i--) {
+        $file->seek($i);
+        $line    = $file->current();
+        $lines[] = rtrim($line); // Newest to oldest
+    }
+
+    // Reverse to get oldest to newest
+    return $lines;
+}
