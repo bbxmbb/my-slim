@@ -290,12 +290,13 @@ class AuthController extends Controller
         $subject          = 'Email Confimation';
         $body             = "Click the following link to confirm your email: <a href='$confirmationLink'>$confirmationLink</a>";
 
-        if (!$emailSender->sendConfirmationEmail($email, $subject, $body, $confirmationCode)) {
+        $mailResult = $emailSender->sendConfirmationEmail($email, $subject, $body, $confirmationCode);
 
-            $responseData['data']['message'] = 'Unexpedted error on sending email';
+        if ($mailResult !== true) {
+            $responseData['data']['message'] = 'Unexpected error on sending email';
+            $responseData['data']['error']   = $mailResult; // contains the exception message
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
             return $response;
-
         }
 
         //if there is a new user just insert new data to database
@@ -425,6 +426,8 @@ class AuthController extends Controller
         //gen token
         $token = JwtTokenGenerator::generateJwtToken($decoded['sub'], $decoded['email']);
 
+        $responseData['data']['select_by'] = $body['select_by'];
+
         $user = $userModel
             ->findAll()
             ->where("email", '=', $decoded['email'])
@@ -463,9 +466,7 @@ class AuthController extends Controller
             $responseData['data']['jwt']     = $body['credential'];
             $responseData['data']['message'] = 'Register successfully! <br>Please reload the page again';
 
-            $response = $this->setLoginCookie($response, $token);
-
-            return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 201, 'admin', $token);
+            return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 201, 'admin/items/report', $token);
 
         } else if ($user['email'] = $decoded['email'] && empty($user['google_sub_id'])) {  //กรณี เคยสมัครด้วย email ไว้แล้ว แต่login ด้วย google
 
@@ -484,7 +485,7 @@ class AuthController extends Controller
         $responseData['data']['select_by'] = $body['select_by'];
         $responseData['data']['message']   = 'Login Successfully';
         $responseData['data']['jwt']       = $token;
-        return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 200, $redirect_url, 'admin', $token);
+        return $this->responseOnGoogleLogin($response, $body['select_by'], $responseData, 200, $redirect_url, 'admin/items/report', $token);
 
     }
     private function responseOnGoogleLogin($response, $select_by, $responseData, $statusCode, $redirect_url = '', $path = 'login', $token = '')
@@ -495,7 +496,7 @@ class AuthController extends Controller
             $response = $this->setLoginCookie($response, $token);
             $response = MyResponseHandler::handleResponse($response, $responseData, 302);
 
-        } else if ($select_by == "btn") { //click btn
+        } else if ($select_by == "btn" || $select_by == "btn_confirm") { //click btn
 
             if ($path == 'login') {
                 $firstStatusCode = substr($statusCode, 0, 1);
@@ -517,6 +518,7 @@ class AuthController extends Controller
             // $response = MyResponseHandler::handleResponse($response, $responseData, 302);
 
             //force redirect to items/report page
+            $response = $this->setLoginCookie($response, $token);
             return $response->withHeader('Location', $_ENV["MYPATH"] . '/admin/items/report')->withStatus(302);
 
 
@@ -634,12 +636,13 @@ class AuthController extends Controller
         $subject          = 'Reset Password Confirmation';
         $body             = "Click the following link to reset password of your account: <a href='$confirmationLink'>$confirmationLink</a>";
 
-        if (!$mailer->sendConfirmationEmail($email, $subject, $body, $confirmationCode)) {
+        $mailResult = $mailer->sendConfirmationEmail($email, $subject, $body, $confirmationCode);
 
-            $responseData['data']['message'] = 'Unexpedted error on sending email';
+        if ($mailResult !== true) {
+            $responseData['data']['message'] = 'Unexpected error on sending email';
+            $responseData['data']['error']   = $mailResult; // contains the exception message
             $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
             return $response;
-
         }
 
         // Update password to that email because already register with google

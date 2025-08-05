@@ -30,9 +30,8 @@ class EmailSender
             $this->mailer->send();
 
             return true;
-        } catch (Exception $e) {
-            // Log or handle the exception as needed
-            return false;
+        } catch (\PHPMailer\PHPMailer\Exception $e) {
+            return 'Mailer error: ' . $e->getMessage(); // return error message
         }
     }
 
