@@ -14,7 +14,8 @@ git clone https://github.com/bbxmbb/my-slim.git .
 Then
 
 ```bash
-composer update
+composer install
+composer dump-autoload
 ```
 After that 
 1. create a .env file from .env.example
@@ -27,3 +28,16 @@ You can clone different release by using this command
 ```bash
 git clone --branch v1.0 --single-branch https://github.com/bbxmbb/my-slim.git .
 ``````
+## For shared host(like mine)
+You might need to download customs autoload
+
+```bash
+php -r "copy('https://getcomposer.org/download/latest-stable/composer.phar', 'composer');"
+chmod +x composer
+```
+
+then follow the same step
+```bash
+./composer install
+./composer dump-autoload
+```
