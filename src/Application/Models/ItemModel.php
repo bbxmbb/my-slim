@@ -19,34 +19,6 @@ class ItemModel extends Model
         $this->imageModel = new ImageModel($pdo);
     }
 
-    public function createTableIfNotExist()
-    {
-        try {
-            // Check if the items table exists
-            $stmt        = $this->pdo->query("SHOW TABLES LIKE '$this->tableName'");
-            $tableExists = $stmt->rowCount() > 0;
-
-            // If the table doesn't exist, create it
-            if (!$tableExists) {
-                $createTableQuery = "
-            CREATE TABLE $this->tableName (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                name VARCHAR(255) NOT NULL,
-                description VARCHAR(255) NOT NULL,
-                numberValue int NOT NULL,
-                booleanValue tinyint DEFAULT 0 ,
-                arrayValue JSON NOT NULL,
-                objectValue JSON NOT NULL,
-                created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-                updated_at timestamp DEFAULT CURRENT_TIMESTAMP
-            )";
-                $this->pdo->exec($createTableQuery);
-            }
-        } catch (PDOException $e) {
-            throw $e;
-        }
-    }
-
     public function getItems(?int $idFilter, ?string $nameFilter = null, ?string $createdDateFromFilter = null, ?string $createdDateToFilter = null, int $pageSize = 1000, int $pageNumber = 1)
     {
         $offset = ($pageNumber - 1) * $pageSize;

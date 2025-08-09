@@ -36,17 +36,6 @@ class AuthController extends Controller
         $itemModel     = new ItemModel($pdo);
         $imageModel    = new ImageModel($pdo);
 
-        // Check if the users,item and settings table exists
-        if (
-            $itemModel->createTableIfNotExist() === false ||
-            $userModel->createTableIfNotExist() === false ||
-            $settingsModel->createTableIfNotExist($timezone) === false ||
-            $imageModel->createTableIfNotExist() === false
-        ) {
-            $responseData["data"]["message"] = $settingsModel->getLastException();
-            $response                        = MyResponseHandler::handleResponse($response, $responseData, 500);
-            return $response;
-        }
         $settings = $settingsModel->getLastSettings();
 
         if ($settings === false) {
