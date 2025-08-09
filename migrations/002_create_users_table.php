@@ -13,14 +13,15 @@ class Migration002CreateUsersTable
             $createTableQuery = "
             CREATE TABLE " . $tableName . " (
                 id INT PRIMARY KEY AUTO_INCREMENT,
-                fname VARCHAR(255) NOT NULL,
-                lname VARCHAR(255) NOT NULL,
-                passport VARCHAR(13) UNIQUE NOT NULL,
-                address text NOT NULL,
-                phonenumber VARCHAR(10) NOT NULL,
-                birthdate date NOT NULL,
-                created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-                updated_at timestamp DEFAULT CURRENT_TIMESTAMP
+                email VARCHAR(255) NOT NULL,
+                google_sub_id VARCHAR(255) NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                confirmation_code TEXT NOT NULL,
+                confirmed TINYINT(1) DEFAULT 0 NOT NULL,
+                reset_password_code TEXT NOT NULL,
+                user_role SMALLINT DEFAULT 99 NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )";
             $pdo->exec($createTableQuery);
         }
