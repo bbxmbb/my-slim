@@ -59,3 +59,7 @@ then follow the same step
 
 Once configured, the app will be able to send emails using your Gmail account.
 
+## After setup .env file You will need to migrate the database
+```bash
+# Run database migrations
+php migrate.php
