@@ -44,21 +44,28 @@ class RateLimitMiddleware implements MiddlewareInterface
 
         } else {
 
-            $currentTime = time();
 
-            $elapsedTime = $currentTime - $_SESSION['rate_limit'][$ip]['timestamp'];
+            $elapsedTime = time() - $_SESSION['rate_limit'][$ip]['timestamp'];
 
             if ($elapsedTime > $this->rateLimitSettings['refillPeriod']) {
 
-                $_SESSION['rate_limit'][$ip] = ['timestamp' => $currentTime, 'count' => 1];
+                $_SESSION['rate_limit'][$ip] = ['timestamp' => time(), 'count' => 1];
 
             } else {
 
                 if ($_SESSION['rate_limit'][$ip]['count'] >= $this->rateLimitSettings['maxCapacity']) {
 
-                    $response = new Response();
-                    $response->getBody()->write((string) ('Rate limit exceeded'));
+                    $response  = new Response();
+                    $remaining = $this->rateLimitSettings['refillPeriod'] - $elapsedTime;
+                    if ($remaining < 0) {
+                        $remaining = 0;
+                    }
 
+                    $response = new Response();
+                    $response->getBody()->write(json_encode([
+                        'error' => 'Rate limit exceeded.',
+                        'wait_seconds' => $remaining
+                    ]));
                     return $response
                         ->withStatus(429)
                         ->withHeader('Content-Type', 'application/json')
@@ -68,6 +75,7 @@ class RateLimitMiddleware implements MiddlewareInterface
                 $_SESSION['rate_limit'][$ip]['count']++;
             }
         }
+
 
         $remainingCount = max(0, $this->rateLimitSettings['maxCapacity'] - $_SESSION['rate_limit'][$ip]['count']);
         $response       = $handler->handle($request);
