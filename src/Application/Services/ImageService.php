@@ -47,7 +47,8 @@ class ImageService
 
     private function fixOrientationImage($image, $tempFilePath)
     {
-        if (function_exists('exif_read_data')) {
+        // Check if EXIF is available and file is JPEG
+        if (function_exists('exif_read_data') && @exif_imagetype($tempFilePath) === IMAGETYPE_JPEG) {
             $exif = @exif_read_data($tempFilePath);
             if (!empty($exif['Orientation'])) {
                 switch ($exif['Orientation']) {
